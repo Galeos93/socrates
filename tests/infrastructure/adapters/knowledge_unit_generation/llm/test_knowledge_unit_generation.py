@@ -1,9 +1,11 @@
 import pytest
 from typing import List
 
-# Assuming the classes and openai_llm_call are imported:
-# Document, Claim, FactKnowledge, SkillKnowledge, LLMKnowledgeUnitGenerationService, openai_llm_call
-from entities import Document, Claim, FactKnowledge, SkillKnowledge, LLMKnowledgeUnitGenerationService, openai_llm_call
+from domain.entities.claim import Claim
+from domain.entities.document import Document
+from domain.entities.knowledge_unit import FactKnowledge, SkillKnowledge
+from infrastructure.adapters.knowledge_unit_generation.llm.openai_client import openai_llm_call
+from infrastructure.adapters.knowledge_unit_generation.llm.service import LLMKnowledgeUnitGenerationService
 
 
 @pytest.mark.integration

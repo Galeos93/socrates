@@ -1,12 +1,10 @@
 import pytest
 
-from entities import (
-    Claim,
-    FactKnowledge,
-    LLMQuestionGenerationService,
-    SkillKnowledge,
-    openai_llm_call,
-)
+from domain.entities.claim import Claim
+from domain.entities.knowledge_unit import FactKnowledge, SkillKnowledge
+from infrastructure.adapters.question_generation.llm.openai_client import openai_llm_call
+from infrastructure.adapters.question_generation.llm.service import LLMQuestionGenerationService
+
 
 @pytest.mark.integration
 def test_llm_question_generation_service():
