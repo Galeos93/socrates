@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "socrates"
+version = "0.1.0"
+description = "A study assistant using LLMs to generate knowledge units, questions, and learning routines."
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://example.com/socrates"
+repository = "https://github.com/yourusername/socrates"
+keywords = ["llm", "learning", "study", "ai"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+openai = "^1.31.0"         # LLM API
+dataclasses-json = "^0.5.7" # optional: serialize dataclasses to/from JSON
+pydantic = "^2.5.0"         # optional: validation if needed
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.4.0"
+pytest-mock = "^3.12.0"
+black = "^24.1.0"
+isort = "^6.0.0"
+mypy = "^1.5.1"
+
+[tool.poetry.scripts]
+socrates-cli = "socrates.main:main"  # optional CLI entry point
+
+[build-system]
+requires = ["poetry-core>=1.6.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+strict = true
