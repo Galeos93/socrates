@@ -1,13 +1,14 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from domain.entities.question import Question, Answer
 
 
-class AnswerEvaluationService:
-    """
-    Service interface for evaluating the correctness of answers to questions.
-    """
+@dataclass
+class AnswerEvaluationService(ABC):
+    """Service interface for evaluating the correctness of answers to questions."""
 
+    @abstractmethod
     def evaluate(self, question: Question, user_answer: Answer) -> bool:
         """
         Evaluates whether the provided answer is correct for the given question.
@@ -24,5 +25,4 @@ class AnswerEvaluationService:
         bool
             True if the answer is correct, False otherwise.
         """
-        # Placeholder implementation; actual logic would depend on question type
-        return question.correct_answer == user_answer
+        pass

@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from application.dto.question_view import QuestionView
+
 
 @dataclass(frozen=True)
 class StudySessionView:

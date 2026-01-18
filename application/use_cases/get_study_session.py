@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from application.dto.study_session_view import StudySessionView
+from application.services.study_session_view import StudySessionViewService
 from domain.ports.learning_plan_repository import LearningPlanRepository
 from domain.ports.question_repository import QuestionRepository
 from domain.entities.learning import LearningPlanID, StudySessionID
@@ -9,7 +10,7 @@ from domain.ports.question_repository import QuestionRepository
 @dataclass
 class GetStudySessionViewUseCase:
     learning_plan_repo: LearningPlanRepository
-    view_service: 'StudySessionViewService'
+    view_service: StudySessionViewService
 
     def execute(
         self,
@@ -20,8 +21,9 @@ class GetStudySessionViewUseCase:
         if not plan:
             raise ValueError("LearningPlan not found")
 
-        session = plan.get_session(study_session_id)
-        if not session:
+        sessions = [s for s in plan.sessions if s.id == study_session_id]
+        if len(sessions) == 0:
             raise ValueError("StudySession not found")
+        session = sessions[0]
 
         return self.view_service.build_view(session)

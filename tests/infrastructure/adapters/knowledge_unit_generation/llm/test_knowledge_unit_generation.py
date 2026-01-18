@@ -24,7 +24,7 @@ def test_llm_knowledge_unit_generation_spanish_accents():
     service = LLMKnowledgeUnitGenerationService(llm_call=openai_llm_call)
 
     # --- 3. Call the service ---
-    knowledge_units: List = service.generate_knowledge_units(doc)
+    knowledge_units: List = service.generate_knowledge_units([doc])
 
     # --- 4. Basic assertions ---
     assert len(knowledge_units) > 0, "No knowledge units were generated."

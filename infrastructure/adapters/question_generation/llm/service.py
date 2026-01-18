@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Callable
 
 from domain.entities.knowledge_unit import KnowledgeUnit, FactKnowledge, SkillKnowledge
@@ -6,17 +7,10 @@ from domain.ports.question_generation import QuestionGenerationService
 from infrastructure.adapters.question_generation.llm.prompts import build_question_creation_prompt
 
 
+@dataclass
 class LLMQuestionGenerationService(QuestionGenerationService):
     """A question generation service that uses an LLM to generate questions."""
-
-    def __init__(self, llm_call: Callable[[str], str]):
-        """
-        Parameters
-        ----------
-        llm_call : Callable[[str], str]
-            A function that takes a prompt string and returns the LLM's raw text output.
-        """
-        self.llm_call = llm_call
+    llm_call: Callable[[str], str]
 
     def generate_next_question(self, ku: KnowledgeUnit) -> Question:
         """

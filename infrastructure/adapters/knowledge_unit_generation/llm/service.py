@@ -6,6 +6,7 @@ import uuid
 from domain.entities.document import Document
 from domain.entities.claim import Claim
 from domain.entities.knowledge_unit import KnowledgeUnit, FactKnowledge, SkillKnowledge
+from domain.ports.knowledge_unit_generation import KnowledgeUnitGenerationService
 from infrastructure.adapters.knowledge_unit_generation.llm.prompts import (
     build_knowledge_unit_extraction_prompt
 )
@@ -13,10 +14,10 @@ from infrastructure.adapters.knowledge_unit_generation.llm.openai_client import 
 
 
 @dataclass
-class LLMKnowledgeUnitGenerationService:
+class LLMKnowledgeUnitGenerationService(KnowledgeUnitGenerationService):
     llm_call: Callable[[str], str] = openai_llm_call
 
-    def generate_knowledge_units(self, doc: Document) -> List[KnowledgeUnit]:
+    def generate_knowledge_units(self, documents: List[Document]) -> List[KnowledgeUnit]:
         """
         Generates KnowledgeUnits from a Document.
 
@@ -25,6 +26,15 @@ class LLMKnowledgeUnitGenerationService:
         - Paragraphs
         - Character ranges
         """
+
+        # Currently only supports single document processing
+        if len(documents) != 1:
+            raise ValueError(
+                "LLMKnowledgeUnitGenerationService currently only supports single"
+                " document processing."
+            )
+
+        doc = documents[0]
         prompt = build_knowledge_unit_extraction_prompt(doc.text)
         raw_response = self.llm_call(prompt)
         data = json.loads(raw_response)

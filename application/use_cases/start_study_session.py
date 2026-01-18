@@ -47,7 +47,7 @@ class StartStudySessionUseCase:
         # 4. Create study session
         session = StudySession(
             id=str(uuid.uuid4()),
-            learning_plan_id=learning_plan.id,
+            knowledge_units=[ku.id for ku in knowledge_units],
             questions={q.id: SessionQuestion(question_id=q.id) for q in questions},
             max_questions=self.max_questions,
         )

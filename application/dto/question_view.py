@@ -1,4 +1,4 @@
-import dataclass
+from dataclasses import dataclass
 from enum import Enum
 
 from domain.entities.question import QuestionStatus

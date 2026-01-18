@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from domain.entities.learning import StudySession
-from domain.entities.question import Question
+from domain.entities.question import Question, SessionQuestion, QuestionStatus
 from application.dto.study_session_view import StudySessionView
 from application.dto.question_view import QuestionView
 from domain.ports.question_repository import QuestionRepository
@@ -12,22 +12,24 @@ class StudySessionViewService:
     question_repository: QuestionRepository
 
     def build_view(self, session: StudySession) -> StudySessionView:
-        questions = [
+        question_ids = [q_id for q_id in session.questions.keys()]
+        session_questions: list[SessionQuestion] = session.questions.values()
+        questions: list[Question] = [
             self.question_repository.get_by_id(q_id)
-            for q_id in session.questions
+            for q_id in question_ids
         ]
 
         question_views = [
             QuestionView(
-                id=q.id,
-                text=q.text,
-                status=self._status(q),
-                attempts=q.times_asked,
+                id=question.id,
+                text=question.text,
+                status=self._status(session_question),
+                attempts=session_question.attempts,
             )
-            for q in questions
+            for session_question, question in zip(session_questions, questions)
         ]
 
-        completed = sum(q.status != "pending" for q in question_views)
+        completed = sum(q.status != QuestionStatus.PENDING for q in question_views)
         total = len(question_views)
 
         return StudySessionView(
@@ -38,9 +40,9 @@ class StudySessionViewService:
         )
 
     @staticmethod
-    def _status(q: Question) -> str:
-        if q.times_asked == 0:
-            return "pending"
-        if q.times_answered_correctly > 0:
-            return "correct"
-        return "incorrect"
+    def _status(q: SessionQuestion) -> QuestionStatus:
+        if q.attempts == 0:
+            return QuestionStatus.PENDING
+        if q.is_correct:
+            return QuestionStatus.CORRECT
+        return QuestionStatus.INCORRECT
