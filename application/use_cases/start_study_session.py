@@ -3,6 +3,7 @@ from datetime import datetime, UTC
 import uuid
 
 from domain.entities.learning import StudySession, LearningPlan
+from domain.entities.question import Question, SessionQuestion
 from domain.ports.question_generation import QuestionGenerationService
 from domain.ports.study_focus_policy import StudyFocusPolicy
 from domain.ports.learning_plan_repository import LearningPlanRepository
@@ -24,7 +25,9 @@ class StartStudySessionUseCase:
 
     def execute(self, learning_plan_id: str) -> StudySession:
         # 1. Load learning plan
-        learning_plan: LearningPlan = self.learning_plan_repository.get(learning_plan_id)
+        learning_plan: LearningPlan = self.learning_plan_repository.get_by_id(
+            learning_plan_id
+        )
 
         # 2. Select knowledge units to study
         knowledge_units = self.study_focus_policy.select_knowledge_units(
@@ -35,9 +38,9 @@ class StartStudySessionUseCase:
         # 3. Generate questions
         # FIXME: This could be optimized to batch generate questions
         # FIXME: More than one question per knowledge unit?
-        questions = []
+        questions: list[Question] = []
         for ku in knowledge_units:
-            q = self.question_generator.generate_next_question(ku)
+            q: Question = self.question_generator.generate_next_question(ku)
             self.question_repository.save(q)
             questions.append(q)
 
@@ -45,7 +48,8 @@ class StartStudySessionUseCase:
         session = StudySession(
             id=str(uuid.uuid4()),
             learning_plan_id=learning_plan.id,
-            question_ids=[q.id for q in questions],
+            questions={q.id: SessionQuestion(question_id=q.id) for q in questions},
+            max_questions=self.max_questions,
         )
 
         # 5. Persist session

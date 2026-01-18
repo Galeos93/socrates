@@ -1,4 +1,5 @@
 from datetime import datetime, UTC
+from enum import Enum
 from typing import  NewType, Optional, List
 from dataclasses import dataclass, field
 
@@ -8,6 +9,12 @@ from domain.entities.knowledge_unit import KnowledgeUnitID
 
 QuestionID = NewType("QuestionID", str)
 Answer = NewType("Answer", str)
+
+
+class QuestionStatus(str, Enum):
+    PENDING = "pending"
+    CORRECT = "correct"
+    INCORRECT = "incorrect"
 
 
 @dataclass
@@ -32,27 +39,57 @@ class Question:
 
     Attributes
     ----------
+    id : QuestionID
+        Unique identifier for the question.
     text : str
         The text of the question.
     difficulty : Difficulty
         Difficulty level of the question.
     correct_answer : Answer
         The correct answer to the question.
-    attempts : List[AnswerAttempt], optional
-        A list of answer attempts made by users. Default is an empty list.
     knowledge_unit : KnowledgeUnit
         The associated knowledge unit (FactKnowledge or SkillKnowledge).
-    times_asked : int, optional
-        Number of times the question has been asked. Default is 0.
-    times_answered_correctly : int, optional
-        Number of times the question has been answered correctly. Default is 0.
     """
     id: QuestionID
     text: str
     difficulty: Difficulty
     correct_answer: Answer
-    attempts: List[AnswerAttempt] = field(default_factory=list)
     knowledge_unit_id: KnowledgeUnitID
-    times_asked: int = 0
-    times_answered_correctly: int = 0
-    last_time_asked: Optional[str] = None  # ISO formatted datetime string
+
+
+@dataclass
+class SessionQuestion:
+    """
+    A Question as it appears within a specific StudySession.
+    Holds session-specific state.
+    """
+    question_id: QuestionID
+    attempts: int = 0
+    is_correct: bool | None = None  # None = unanswered
+    last_answered_at: datetime | None = None
+    knowledge_unit_id: KnowledgeUnitID | None = None
+
+    def register_attempt(self) -> None:
+        if self.is_correct is not None:
+            raise ValueError("Question already assessed")
+
+        self.attempts += 1
+        self.last_answered_at = datetime.now(UTC)
+
+    def mark_correctness(self, correct: bool) -> None:
+        if self.attempts == 0:
+            raise ValueError("Cannot assess without an attempt")
+
+        if self.is_correct is not None:
+            raise ValueError("Correctness already assigned")
+
+        self.is_correct = correct
+
+    @property
+    def status(self) -> str:
+        if self.is_correct is None:
+            return QuestionStatus.PENDING.value
+        elif self.is_correct:
+            return QuestionStatus.CORRECT.value
+        else:
+            return QuestionStatus.INCORRECT.value

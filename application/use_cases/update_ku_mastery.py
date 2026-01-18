@@ -3,17 +3,18 @@ from dataclasses import dataclass
 from domain.ports.learning_plan_repository import LearningPlanRepository
 from domain.ports.question_repository import QuestionRepository
 from domain.services.mastery import MasteryService
+from domain.entities.learning import SessionQuestion
 from domain.entities.knowledge_unit import KnowledgeUnit
 
 
 @dataclass
 class UpdateKnowledgeUnitMasteryUseCase:
     """
-    Updates mastery levels for a KnowledgeUnit based on question history.
+    Updates mastery for a KnowledgeUnit based on StudySession outcomes
+    within a LearningPlan.
     """
 
     learning_plan_repository: LearningPlanRepository
-    question_repository: QuestionRepository
     mastery_service: MasteryService
 
     def execute(
@@ -21,32 +22,38 @@ class UpdateKnowledgeUnitMasteryUseCase:
         learning_plan_id: str,
         knowledge_unit_id: str,
     ) -> KnowledgeUnit:
-        # 1. Load aggregate
-        learning_plan = self.learning_plan_repository.get_by_id(learning_plan_id)
 
-        # 2. Find knowledge unit
+        # 1. Load aggregate root
+        plan = self.learning_plan_repository.get_by_id(learning_plan_id)
+        if not plan:
+            raise ValueError("LearningPlan not found")
+
+        # 2. Find KnowledgeUnit
         ku = next(
-            ku for ku in learning_plan.knowledge_units
-            if ku.id == knowledge_unit_id
+            (ku for ku in plan.knowledge_units if ku.id == knowledge_unit_id),
+            None
         )
+        if not ku:
+            raise ValueError("KnowledgeUnit not part of LearningPlan")
 
-        # 3. Load all related questions
-        # FIXME: This could be optimized with a query method in the repo
-        questions = [
-            q for q in
-            self.question_repository.list_all()
-            if q.knowledge_unit_id == ku.id
-        ]
+        # 3. Collect session questions for this KU
+        session_questions: list[SessionQuestion] = []
+
+        for session in plan.sessions:
+            for sq in session.questions.values():
+                if sq.knowledge_unit_id == ku.id and sq.is_correct is not None:
+                    session_questions.append(sq)
 
         # 4. Calculate mastery
         new_mastery = self.mastery_service.update_mastery(
-            ku=ku,
-            questions=questions,
+            knowledge_unit=ku,
+            session_questions=session_questions,
         )
 
+        # 5. Apply mastery
         ku.mastery_level = new_mastery
 
-        # 5. Persist aggregate
-        self.learning_plan_repository.save(learning_plan)
+        # 6. Persist aggregate
+        self.learning_plan_repository.save(plan)
 
         return ku

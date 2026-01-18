@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from domain.entities.knowledge_unit import KnowledgeUnit
-from domain.entities.question import Question
+from domain.entities.question import SessionQuestion
 
 
 class MasteryService(ABC):
@@ -10,66 +10,71 @@ class MasteryService(ABC):
     def update_mastery(
         self,
         ku: KnowledgeUnit,
-        questions: List[Question]
+        session_questions: List[SessionQuestion],
     ) -> KnowledgeUnit:
         """
-        Update the mastery level of a KnowledgeUnit based on question performance.
+        Update the mastery level of a KnowledgeUnit based on session question outcomes.
 
         Parameters
         ----------
         ku: KnowledgeUnit
-            The fact or skill to update mastery for.
-        questions: List[Question]
-            List of questions answered related to the KnowledgeUnit.
+            The knowledge unit to update.
+        session_questions: List[SessionQuestion]
+            Session-specific question outcomes related to this KnowledgeUnit.
 
         Returns
         -------
         KnowledgeUnit
-
+            The updated KnowledgeUnit.
         """
         pass
 
 
 class QuestionBasedMasteryService(MasteryService):
+    """Computes mastery based on session-level question outcomes.
 
-    @staticmethod
-    def compute_mastery_from_questions(questions: List[Question]) -> float:
-        if not questions:
-            return 0.0
+    Notes
+    -----
 
-        total = 0.0
-        weight_sum = 0.0
+    Rules:
+    - Correct answers increase mastery
+    - Incorrect answers decrease mastery
+    - Multiple attempts penalize mastery
 
-        for q in questions:
-            if q.times_asked == 0:
-                continue
-
-            accuracy = q.times_answered_correctly / q.times_asked
-            weight = q.difficulty.level
-
-            total += accuracy * weight
-            weight_sum += weight
-
-        return min(1.0, total / weight_sum) if weight_sum > 0 else 0.0
-
-    def calculate_mastery_from_questions(
+    """
+    def update_mastery(
         self,
         ku: KnowledgeUnit,
-        questions: List[Question]
+        session_questions: List[SessionQuestion],
+    ) -> KnowledgeUnit:
+        ku.mastery_level = self.compute_mastery(session_questions)
+        return ku
+
+    @staticmethod
+    def compute_mastery(
+        session_questions: List[SessionQuestion],
     ) -> float:
-        """
-        Calculate mastery level from question performance.
+        if not session_questions:
+            return 0.0
 
-        Parameters
-        ----------
-        ku: KnowledgeUnit
-            The fact or skill to calculate mastery for.
-        questions: List[Question]
-            List of questions answered related to the KnowledgeUnit.
+        score = 0.0
+        max_score = 0.0
 
-        Returns
-        -------
-        float
-            New mastery level between 0.0 and 1.0.
-        """
-        return self.compute_mastery_from_questions(questions)
+        for sq in session_questions:
+            if sq.is_correct is None:
+                continue
+
+            # Base score per question
+            max_score += 1.0
+
+            if sq.is_correct:
+                # Penalize retries
+                penalty = max(0.0, 1.0 - 0.2 * (sq.attempts - 1))
+                score += penalty
+            else:
+                score += 0.0
+
+        if max_score == 0:
+            return 0.0
+
+        return min(1.0, score / max_score)

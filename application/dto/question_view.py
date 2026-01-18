@@ -1,9 +1,12 @@
 import dataclass
+from enum import Enum
+
+from domain.entities.question import QuestionStatus
 
 
 @dataclass(frozen=True)
 class QuestionView:
     id: str
     text: str
-    status: str  # pending | correct | incorrect
+    status: QuestionStatus
     attempts: int
