@@ -21,6 +21,7 @@ class SubmitAnswerUseCase:
         learning_plan_id: str,
         study_session_id: str,
         question_id: str,
+        user_answer: str = "",
     ) -> None:
         # 1. Load aggregate root
         learning_plan = self.learning_plan_repository.get_by_id(learning_plan_id)

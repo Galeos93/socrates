@@ -3,6 +3,7 @@ import logging
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
 import uvicorn
 from vyper import v
 
@@ -23,6 +24,11 @@ def _configure_logger() -> None:
         handlers=[handler],
         force=True,
     )
+
+
+def load_dotenv_config() -> None:
+    """Load configuration from .env file if present."""
+    load_dotenv()
 
 
 def load_vyper_config() -> None:
@@ -71,6 +77,7 @@ def create_app():
 
     # Load configuration
     _configure_logger()
+    load_dotenv_config()
     load_vyper_config()
     set_config_defaults()
 
@@ -93,11 +100,10 @@ def create_app():
 
     return app
 
+app = create_app()
 
 def main() -> None:
     """Main entrypoint for running the application."""
-    app = create_app()
-
     # Get server configuration
     host = v.get_string("server.host")
     port = v.get_int("server.port")
@@ -112,7 +118,7 @@ def main() -> None:
 
     # Run the application
     uvicorn.run(
-        app,
+        "main:app",
         host=host,
         port=port,
         reload=reload,

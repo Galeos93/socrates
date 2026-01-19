@@ -136,6 +136,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.local
 .envrc
 .venv
 env/
@@ -211,3 +212,28 @@ __marimo__/
 
 # docs folder
 docs/
+
+
+####################################
+# Node / Frontend (Vite, React, TS)
+####################################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite / build output
+dist/
+dist-ssr/
+.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+####################################
+# Frontend config artifacts
+####################################
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/

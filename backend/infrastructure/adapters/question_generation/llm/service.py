@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Callable
+import uuid
 
 from domain.entities.knowledge_unit import KnowledgeUnit, FactKnowledge, SkillKnowledge
 from domain.entities.question import Question, Difficulty, Answer
@@ -53,10 +54,11 @@ class LLMQuestionGenerationService(QuestionGenerationService):
 
         # --- 4. Construct Question ---
         question = Question(
+            id=str(uuid.uuid4()),
             text=question_text,
-            answer=Answer(answer_text),
+            correct_answer=Answer(answer_text),
             difficulty=Difficulty(level=difficulty_level),
-            knowledge_unit=ku
+            knowledge_unit_id=ku.id
         )
 
         return question

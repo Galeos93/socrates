@@ -1,0 +1,8 @@
+{
+  "name": "Socrates - AI Study Assistant",
+  "description": "A sophisticated AI-powered study companion that extracts knowledge from your documents and guides you to mastery through adaptive questioning and Socratic tutoring.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

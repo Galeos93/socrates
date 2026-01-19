@@ -58,4 +58,5 @@ class IngestDocumentAPIBase:
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
+            print(e)
             raise HTTPException(status_code=500, detail=f"Failed to ingest document: {str(e)}")

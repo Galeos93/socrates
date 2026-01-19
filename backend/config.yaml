@@ -14,4 +14,4 @@ study_session:
 server:
   host: "0.0.0.0"
   port: 8000
-  reload: false  # Set to true for development
+  reload: true  # Set to true for development

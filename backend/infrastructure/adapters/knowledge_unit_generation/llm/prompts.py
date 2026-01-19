@@ -9,7 +9,8 @@ def build_knowledge_unit_extraction_prompt(text: str) -> str:
     2. Facts: Declarative knowledge units based on exactly one claim (target claim).
     3. Skills: Applied/procedural knowledge units based on one or more claims.
 
-    Your output must be strictly JSON in the following format:
+    Your output must be strictly JSON in the following format, DO NOT enclose it with
+    ``json`` or any other markdown:
 
     {{
     "claims": [

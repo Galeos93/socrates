@@ -42,6 +42,7 @@ class LLMKnowledgeUnitGenerationService(KnowledgeUnitGenerationService):
         doc = documents[0]
         prompt = build_knowledge_unit_extraction_prompt(doc.text)
         raw_response = self.llm_call(prompt)
+        print(raw_response)
         data = json.loads(raw_response)
 
         # --- Phase A: create claims ---
