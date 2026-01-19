@@ -4,13 +4,20 @@ from typing import Callable
 from domain.entities.knowledge_unit import KnowledgeUnit, FactKnowledge, SkillKnowledge
 from domain.entities.question import Question, Difficulty, Answer
 from domain.ports.question_generation import QuestionGenerationService
+from infrastructure.adapters.answer_evaluation import create_openai_llm_call
 from infrastructure.adapters.question_generation.llm.prompts import build_question_creation_prompt
+from infrastructure.adapters.question_generation.llm.openai_client import create_openai_llm_call
 
 
 @dataclass
 class LLMQuestionGenerationService(QuestionGenerationService):
     """A question generation service that uses an LLM to generate questions."""
-    llm_call: Callable[[str], str]
+    client: object
+    model: str = "gpt-4o"
+
+    def __post_init__(self):
+        """Initialize llm_call with the client."""
+        self.llm_call = create_openai_llm_call(self.client, self.model)
 
     def generate_next_question(self, ku: KnowledgeUnit) -> Question:
         """

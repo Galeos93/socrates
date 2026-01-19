@@ -2,8 +2,25 @@ import json
 from dataclasses import dataclass
 from typing import Callable
 
+from openai import OpenAI
+
 from domain.ports.answer_evaluation import AnswerEvaluationService
 from domain.entities.question import Question, Answer
+
+
+def create_openai_llm_call(client: OpenAI, model: str = "gpt-4") -> Callable[[str], str]:
+    """Create an llm_call function using the provided client and model."""
+    def llm_call(prompt: str, temperature: float = 0.0) -> str:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "You are a precise grading assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=temperature,
+        )
+        return response.choices[0].message.content.strip()
+    return llm_call
 
 
 @dataclass
@@ -15,7 +32,13 @@ class LLMAnswerEvaluationService(AnswerEvaluationService):
     given the question and the expected answer.
     """
 
-    llm_call: Callable[[str], str]
+    client: object
+    model: str = "gpt-4o"
+
+    def __post_init__(self):
+        """Initialize llm_call with the client."""
+        from infrastructure.adapters.answer_evaluation import create_openai_llm_call
+        self.llm_call = create_openai_llm_call(self.client, self.model)
 
     def evaluate(self, question: Question, user_answer: Answer) -> bool:
         prompt = self._build_prompt(question, user_answer)

@@ -19,18 +19,18 @@ class LLMOCRDocumentParser(DocumentParser):
     Currently only supports PDF files.
     """
 
-    def __init__(self, openai_client, model: str = "gpt-4o"):
+    def __init__(self, client, model: str = "gpt-4o"):
         """
         Initialize the LLM OCR parser.
 
         Parameters
         ----------
-        openai_client
+        client
             OpenAI client instance for making API calls.
         model : str
             OpenAI model to use for vision tasks (default: "gpt-4o").
         """
-        self.client = openai_client
+        self.client = client
         self.model = model
 
     def parse(self, file_bytes: bytes, filename: str) -> Document:

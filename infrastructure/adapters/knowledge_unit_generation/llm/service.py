@@ -10,12 +10,17 @@ from domain.ports.knowledge_unit_generation import KnowledgeUnitGenerationServic
 from infrastructure.adapters.knowledge_unit_generation.llm.prompts import (
     build_knowledge_unit_extraction_prompt
 )
-from infrastructure.adapters.knowledge_unit_generation.llm.openai_client import openai_llm_call
+from infrastructure.adapters.knowledge_unit_generation.llm.openai_client import create_openai_llm_call
 
 
 @dataclass
 class LLMKnowledgeUnitGenerationService(KnowledgeUnitGenerationService):
-    llm_call: Callable[[str], str] = openai_llm_call
+    client: object
+    model: str = "gpt-4o"
+
+    def __post_init__(self):
+        """Initialize llm_call with the client."""
+        self.llm_call = create_openai_llm_call(self.client, self.model)
 
     def generate_knowledge_units(self, documents: List[Document]) -> List[KnowledgeUnit]:
         """

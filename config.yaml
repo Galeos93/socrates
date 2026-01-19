@@ -1,0 +1,17 @@
+# Socrates Study Assistant Configuration
+
+# OpenAI API settings
+openai:
+  api_key: ""  # Set via OPENAI_API_KEY environment variable
+  completion_model: "gpt-4o"
+  vision_model: "gpt-4o"
+
+# Study session settings
+study_session:
+  max_questions: 10
+
+# Server settings
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: false  # Set to true for development
