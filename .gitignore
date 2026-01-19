@@ -208,3 +208,6 @@ __marimo__/
 
 # Copilot instructions
 .github/copilot-instructions.md
+
+# docs folder
+docs/
