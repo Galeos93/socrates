@@ -28,9 +28,9 @@ class CreateLearningPlanFromDocumentUseCase:
     learning_scope_policy: LearningScopePolicy
     learning_plan_repository: LearningPlanRepository
 
-    def execute(self, document: Document) -> LearningPlan:
+    def execute(self, documents: List[Document]) -> LearningPlan:
         # 1. Generate knowledge units from the document
-        knowledge_units = self.ku_generator.generate_knowledge_units(document)
+        knowledge_units = self.ku_generator.generate_knowledge_units(documents)
 
         # 2. Apply learning scope policy
         knowledge_units = self.learning_scope_policy.select_knowledge_units(

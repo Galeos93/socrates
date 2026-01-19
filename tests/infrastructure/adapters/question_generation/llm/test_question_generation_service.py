@@ -1,3 +1,4 @@
+import os
 import pytest
 
 from domain.entities.claim import Claim
@@ -7,6 +8,10 @@ from infrastructure.adapters.question_generation.llm.service import LLMQuestionG
 
 
 @pytest.mark.integration
+@pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None,
+    reason="Requires OPENAI_API_KEY environment variable"
+)
 def test_llm_question_generation_service():
     # --- 1. Setup sample claims and knowledge units ---
     claim1 = Claim(text="Words stressed on the final syllable ending in n, s, or vowel carry a written accent.", doc_id="doc1", doc_location="")

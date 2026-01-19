@@ -1,3 +1,4 @@
+import os
 import pytest
 from typing import List
 
@@ -9,6 +10,10 @@ from infrastructure.adapters.knowledge_unit_generation.llm.service import LLMKno
 
 
 @pytest.mark.integration
+@pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None,
+    reason="Requires OPENAI_API_KEY environment variable"
+)
 def test_llm_knowledge_unit_generation_spanish_accents():
     # --- 1. Setup: sample document ---
     doc = Document(
