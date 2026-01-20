@@ -1,10 +1,11 @@
 """Tests for SubmitAnswerUseCase."""
 import pytest
+from unittest.mock import ANY
 import uuid
 
 from application.use_cases.submit_answer import SubmitAnswerUseCase
 from domain.entities.learning import LearningPlan, StudySession
-from domain.entities.question import QuestionID, SessionQuestion
+from domain.entities.question import QuestionID, SessionQuestion, Answer, AnswerAttempt
 from infrastructure.adapters.learning_plan_repository import InMemoryLearningPlanRepository
 
 
@@ -40,13 +41,20 @@ class TestSubmitAnswerUseCase:
             learning_plan_id=sample_learning_plan.id,
             study_session_id=sample_study_session.id,
             question_id=question_id,
+            user_answer=Answer("Sample answer")
         )
 
         # Assert
         updated_plan = learning_plan_repository.get_by_id(sample_learning_plan.id)
         session = updated_plan.sessions[0]
         session_question = session.questions[question_id]
-        assert session_question.attempts == 1
+        assert session_question.attempts == [
+            AnswerAttempt(
+                user_answer=Answer("Sample answer"),
+                answered_at=ANY,
+                assessment=None,
+            )
+        ]
         assert session_question.last_answered_at is not None
 
     @staticmethod
@@ -72,6 +80,7 @@ class TestSubmitAnswerUseCase:
             learning_plan_id=sample_learning_plan.id,
             study_session_id=sample_study_session.id,
             question_id=question_id,
+            user_answer=Answer("First answer"),
         )
         # Note: This should fail due to "already assessed" check
         # But testing what the use case SHOULD do, not what it does
@@ -99,6 +108,7 @@ class TestSubmitAnswerUseCase:
             learning_plan_id=sample_learning_plan.id,
             study_session_id=sample_study_session.id,
             question_id=question_id,
+            user_answer=Answer("Another answer"),
         )
 
         # Assert
@@ -121,6 +131,7 @@ class TestSubmitAnswerUseCase:
                 learning_plan_id="non-existent-id",
                 study_session_id="session-id",
                 question_id="question-id",
+                user_answer=None,
             )
 
     @staticmethod
@@ -142,6 +153,7 @@ class TestSubmitAnswerUseCase:
                 learning_plan_id=sample_learning_plan.id,
                 study_session_id="non-existent-session-id",
                 question_id="question-id",
+                user_answer=None,
             )
 
     @staticmethod
@@ -164,4 +176,5 @@ class TestSubmitAnswerUseCase:
                 learning_plan_id=sample_learning_plan.id,
                 study_session_id=sample_study_session.id,
                 question_id=QuestionID("non-existent-question-id"),
+                user_answer=None,
             )

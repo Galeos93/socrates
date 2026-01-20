@@ -22,7 +22,8 @@ def build_question_creation_prompt(ku: KnowledgeUnit) -> str:
         Fact: {ku.description}
         Source Claim: {source_texts}
 
-        Output JSON format only:
+        Output JSON format only, DO NOT enclose it with
+        ``json`` or any other markdown:
         {{
             "question_text": "string",
             "answer": "string",
@@ -37,7 +38,8 @@ def build_question_creation_prompt(ku: KnowledgeUnit) -> str:
         Skill: {ku.description}
         Source Claims: {claims_texts}
 
-        Output JSON format only:
+        Output JSON format only, DO NOT enclose it with
+        ``json`` or any other markdown:
         {{
             "question_text": "string",
             "answer": "string",

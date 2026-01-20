@@ -1,10 +1,8 @@
 from dataclasses import dataclass
-from datetime import datetime, UTC
 
 from domain.ports.learning_plan_repository import LearningPlanRepository
-from domain.ports.question_repository import QuestionRepository
-from domain.entities.question import Answer, QuestionID, AnswerAttempt
-from domain.entities.learning import LearningPlan, StudySession, LearningPlanID, StudySessionID
+from domain.entities.question import Answer, QuestionID
+from domain.entities.learning import StudySessionID
 
 
 @dataclass
@@ -19,9 +17,9 @@ class SubmitAnswerUseCase:
     def execute(
         self,
         learning_plan_id: str,
-        study_session_id: str,
-        question_id: str,
-        user_answer: str = "",
+        study_session_id: StudySessionID,
+        question_id: QuestionID,
+        user_answer: Answer,
     ) -> None:
         # 1. Load aggregate root
         learning_plan = self.learning_plan_repository.get_by_id(learning_plan_id)
@@ -29,7 +27,7 @@ class SubmitAnswerUseCase:
             raise ValueError("LearningPlan not found")
 
         # 2. Locate study session
-        session: StudySession = next(
+        session = next(
             (s for s in learning_plan.sessions if s.id == study_session_id),
             None
         )
@@ -37,11 +35,12 @@ class SubmitAnswerUseCase:
             raise ValueError("StudySession not found")
 
         # 3. Validate question belongs to session
-        if question_id not in session.questions:
+        session_question = session.questions.get(question_id)
+        if not session_question:
             raise ValueError("Question not part of this StudySession")
 
-        # 4. Register attempt (correctness decided later)
-        session.questions[question_id].register_attempt()
+        # 4. Submit answer (creates AnswerAttempt)
+        session_question.submit_answer(user_answer)
 
         # 5. Persist aggregate
         self.learning_plan_repository.save(learning_plan)

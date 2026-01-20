@@ -27,9 +27,17 @@ class Difficulty:
 @dataclass(frozen=True)
 class AnswerAttempt:
     user_answer: Answer
-    is_correct: bool | None = None
     answered_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    score: float | None = None  # optional for partial credit
+    assessment: "AnswerAssessment | None" = None
+
+
+@dataclass(frozen=True)
+class AnswerAssessment:
+    is_correct: bool
+    correct_answer: Answer | None = None
+    explanation: str | None = None
+    confidence: float | None = None
+    assessed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass
@@ -64,26 +72,39 @@ class SessionQuestion:
     Holds session-specific state.
     """
     question_id: QuestionID
-    attempts: int = 0
+    attempts: list[AnswerAttempt] = field(default_factory=list)
     is_correct: bool | None = None  # None = unanswered
     last_answered_at: datetime | None = None
     knowledge_unit_id: KnowledgeUnitID | None = None
 
-    def register_attempt(self) -> None:
-        if self.is_correct is not None:
-            raise ValueError("Question already assessed")
-
-        self.attempts += 1
+    def submit_answer(self, user_answer: Answer) -> None:
+        self.attempts.append(
+            AnswerAttempt(
+                user_answer=user_answer,
+                answered_at=datetime.now(UTC),
+            )
+        )
         self.last_answered_at = datetime.now(UTC)
 
-    def mark_correctness(self, correct: bool) -> None:
-        if self.attempts == 0:
-            raise ValueError("Cannot assess without an attempt")
 
-        if self.is_correct is not None:
-            raise ValueError("Correctness already assigned")
+    def latest_unassessed_attempt(self) -> AnswerAttempt | None:
+        for attempt in reversed(self.attempts):
+            if attempt.assessment is None:
+                return attempt
+        return None
 
-        self.is_correct = correct
+
+    def attach_assessment(
+        self,
+        attempt: AnswerAttempt,
+        assessment: AnswerAssessment
+    ) -> None:
+        index = self.attempts.index(attempt)
+        self.attempts[index] = AnswerAttempt(
+            user_answer=attempt.user_answer,
+            answered_at=attempt.answered_at,
+            assessment=assessment,
+        )
 
     @property
     def status(self) -> str:

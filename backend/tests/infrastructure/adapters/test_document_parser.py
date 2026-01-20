@@ -23,7 +23,7 @@ class TestLLMOCRDocumentParser:
     @pytest.fixture
     def parser(self, mock_openai_client):
         """Create parser instance with mock client."""
-        return LLMOCRDocumentParser(openai_client=mock_openai_client)
+        return LLMOCRDocumentParser(client=mock_openai_client)
 
     @staticmethod
     def test_parse_rejects_non_pdf(parser):
@@ -128,7 +128,7 @@ class TestLLMOCRDocumentParserIntegration:
         # 3. poppler-utils installed for pdf2image
         
         client = OpenAI()
-        parser = LLMOCRDocumentParser(openai_client=client)
+        parser = LLMOCRDocumentParser(client=client)
         
         # Load a real PDF
         with open("test_document.pdf", "rb") as f:

@@ -30,14 +30,12 @@ class AssessQuestionAPIImpl(AssessQuestionAPIBase):
         learning_plan_id: str,
         session_id: str,
         question_id: str,
-        user_answer: str,
     ) -> dict:
         """Assess question endpoint implementation."""
         is_correct = self.assess_question_use_case.execute(
             learning_plan_id=learning_plan_id,
             study_session_id=session_id,
             question_id=question_id,
-            user_answer=Answer(user_answer),
         )
         
         return {

@@ -3,14 +3,17 @@ from dataclasses import dataclass
 from domain.ports.learning_plan_repository import LearningPlanRepository
 from domain.ports.question_repository import QuestionRepository
 from domain.ports.answer_evaluation import AnswerEvaluationService
-from domain.entities.question import Answer, QuestionID
+from domain.entities.question import (
+    QuestionID, AnswerAssessment, SessionQuestion, AnswerAttempt
+)
 from domain.entities.learning import StudySessionID
 
 
 @dataclass
 class AssessQuestionOutcomeUseCase:
     """
-    Determines whether an answer is correct and updates session-specific state.
+    Determines whether a submitted answer is correct and updates
+    session-specific state.
     """
 
     learning_plan_repository: LearningPlanRepository
@@ -22,8 +25,7 @@ class AssessQuestionOutcomeUseCase:
         learning_plan_id: str,
         study_session_id: StudySessionID,
         question_id: QuestionID,
-        user_answer: Answer,
-    ) -> bool:
+    ) -> AnswerAssessment:
         # 1. Load aggregate root
         learning_plan = self.learning_plan_repository.get_by_id(learning_plan_id)
         if not learning_plan:
@@ -38,25 +40,30 @@ class AssessQuestionOutcomeUseCase:
             raise ValueError("StudySession not found")
 
         # 3. Locate session question
-        session_question = session.questions.get(question_id)
+        session_question: SessionQuestion = session.questions.get(question_id)
         if not session_question:
             raise ValueError("Question not part of this StudySession")
 
-        # 4. Load canonical question
+        # 4. Get latest unanswered attempt
+        attempt: AnswerAttempt = session_question.latest_unassessed_attempt()
+        if not attempt:
+            raise ValueError("No unassessed answer attempt found")
+
+        # 5. Load canonical question
         question = self.question_repository.get_by_id(question_id)
         if not question:
             raise ValueError("Question not found")
 
-        # 5. Evaluate correctness
-        is_correct = self.answer_evaluation_service.evaluate(
+        # 6. Evaluate
+        assessment = self.answer_evaluation_service.evaluate(
             question=question,
-            user_answer=user_answer,
+            user_answer=attempt.user_answer,
         )
 
-        # 6. Update session-specific state
-        session_question.mark_correctness(is_correct)
+        # 7. Attach assessment to attempt
+        session_question.attach_assessment(attempt, assessment)
 
-        # 7. Persist aggregate
+        # 8. Persist aggregate
         self.learning_plan_repository.save(learning_plan)
 
-        return is_correct
+        return assessment

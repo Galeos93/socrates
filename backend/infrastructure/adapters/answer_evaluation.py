@@ -1,15 +1,20 @@
 import json
 from dataclasses import dataclass
+from datetime import datetime, UTC
 from typing import Callable
 
 from openai import OpenAI
 
 from domain.ports.answer_evaluation import AnswerEvaluationService
-from domain.entities.question import Question, Answer
+from domain.entities.question import Question, Answer, AnswerAssessment
 
 
-def create_openai_llm_call(client: OpenAI, model: str = "gpt-4") -> Callable[[str], str]:
+def create_openai_llm_call(
+    client: OpenAI,
+    model: str = "gpt-4o",
+) -> Callable[[str], str]:
     """Create an llm_call function using the provided client and model."""
+
     def llm_call(prompt: str, temperature: float = 0.0) -> str:
         response = client.chat.completions.create(
             model=model,
@@ -20,38 +25,50 @@ def create_openai_llm_call(client: OpenAI, model: str = "gpt-4") -> Callable[[st
             temperature=temperature,
         )
         return response.choices[0].message.content.strip()
+
     return llm_call
 
 
 @dataclass
 class LLMAnswerEvaluationService(AnswerEvaluationService):
-    """
-    LLM-based implementation of AnswerEvaluationService.
+    """LLM-based implementation of AnswerEvaluationService.
 
-    Uses an LLM to evaluate whether a user's answer is correct
-    given the question and the expected answer.
+    Notes
+    -----
+    Produces a rich AssessmentResult, including optional explanation.
     """
 
-    client: object
+    client: OpenAI
     model: str = "gpt-4o"
 
-    def __post_init__(self):
-        """Initialize llm_call with the client."""
-        from infrastructure.adapters.answer_evaluation import create_openai_llm_call
+    def __post_init__(self) -> None:
         self.llm_call = create_openai_llm_call(self.client, self.model)
 
-    def evaluate(self, question: Question, user_answer: Answer) -> bool:
+    def evaluate(
+        self,
+        question: Question,
+        user_answer: Answer,
+    ) -> AnswerAssessment:
         prompt = self._build_prompt(question, user_answer)
-
         raw_response = self.llm_call(prompt)
 
         try:
             data = json.loads(raw_response)
         except json.JSONDecodeError:
-            # Fail closed: if the LLM response is invalid, mark as incorrect
-            return False
+            # Fail closed
+            return AnswerAssessment(
+                is_correct=False,
+                correct_answer=question.correct_answer,
+                explanation=None,
+                assessed_at=datetime.now(UTC),
+            )
 
-        return bool(data.get("is_correct", False))
+        return AnswerAssessment(
+            is_correct=bool(data.get("is_correct", False)),
+            correct_answer=question.correct_answer,
+            explanation=data.get("explanation"),
+            assessed_at=datetime.now(UTC),
+        )
 
     def _build_prompt(self, question: Question, user_answer: Answer) -> str:
         return f"""
@@ -72,9 +89,11 @@ EXPECTED_ANSWER:
 USER_ANSWER:
 {user_answer}
 
-Respond ONLY with valid JSON in the following format:
+Respond ONLY with valid JSON in the following format, DO NOT enclose it with
+``json`` or any other markdown:
 
 {{
-  "is_correct": true | false
+  "is_correct": true | false,
+  "explanation": "Brief explanation of why the answer is correct or incorrect"
 }}
 """.strip()

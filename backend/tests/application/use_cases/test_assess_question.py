@@ -5,7 +5,9 @@ from unittest.mock import Mock
 
 from application.use_cases.assess_question import AssessQuestionOutcomeUseCase
 from domain.entities.learning import LearningPlan, StudySession
-from domain.entities.question import Question, QuestionID, SessionQuestion, Answer, Difficulty
+from domain.entities.question import (
+    Question, QuestionID, SessionQuestion, Answer, AnswerAttempt, AnswerAssessment
+)
 from domain.ports.answer_evaluation import AnswerEvaluationService
 from infrastructure.adapters.learning_plan_repository import InMemoryLearningPlanRepository
 from infrastructure.adapters.question_repository import InMemoryQuestionRepository
@@ -38,13 +40,22 @@ class TestAssessQuestionOutcomeUseCase:
         # Arrange
         question_id = sample_question.id
         sample_study_session.questions[question_id] = SessionQuestion(
-            question_id=question_id, attempts=1
+            question_id=question_id, attempts=[
+                AnswerAttempt(user_answer=Answer("Some answer"),
+                              assessment=None
+                )
+            ]
         )
         learning_plan_repository.save(sample_learning_plan)
         question_repository.save(sample_question)
 
         mock_evaluator = Mock(spec=AnswerEvaluationService)
-        mock_evaluator.evaluate.return_value = True
+        mock_evaluator.evaluate.return_value = AnswerAssessment(
+            is_correct=True,
+            correct_answer=sample_question.correct_answer,
+            explanation="Explanation",
+            assessed_at=None,
+        )
 
         use_case = AssessQuestionOutcomeUseCase(
             learning_plan_repository=learning_plan_repository,
@@ -59,11 +70,15 @@ class TestAssessQuestionOutcomeUseCase:
             learning_plan_id=sample_learning_plan.id,
             study_session_id=sample_study_session.id,
             question_id=question_id,
-            user_answer=user_answer,
         )
 
         # Assert
-        assert result is True
+        assert result == AnswerAssessment(
+            is_correct=True,
+            correct_answer=sample_question.correct_answer,
+            explanation="Explanation",
+            assessed_at=None,
+        )
         mock_evaluator.evaluate.assert_called_once_with(
             question=sample_question, user_answer=user_answer
         )
@@ -80,13 +95,21 @@ class TestAssessQuestionOutcomeUseCase:
         # Arrange
         question_id = sample_question.id
         sample_study_session.questions[question_id] = SessionQuestion(
-            question_id=question_id, attempts=1
+            question_id=question_id, attempts=[
+                AnswerAttempt(user_answer=Answer("Attempt 1"),
+                              assessment=None
+                )
+            ]
         )
         learning_plan_repository.save(sample_learning_plan)
         question_repository.save(sample_question)
 
         mock_evaluator = Mock(spec=AnswerEvaluationService)
-        mock_evaluator.evaluate.return_value = False
+        mock_evaluator.evaluate.return_value = AnswerAssessment(
+            is_correct=False,
+            correct_answer=sample_question.correct_answer,
+            explanation="Explanation",
+        )
 
         use_case = AssessQuestionOutcomeUseCase(
             learning_plan_repository=learning_plan_repository,
@@ -99,14 +122,13 @@ class TestAssessQuestionOutcomeUseCase:
             learning_plan_id=sample_learning_plan.id,
             study_session_id=sample_study_session.id,
             question_id=question_id,
-            user_answer=Answer("Wrong answer"),
         )
 
         # Assert
         updated_plan = learning_plan_repository.get_by_id(sample_learning_plan.id)
         session = updated_plan.sessions[0]
         session_question = session.questions[question_id]
-        assert session_question.is_correct is False
+        assert session_question.attempts[0].assessment.is_correct is False
 
     @staticmethod
     def test_persists_aggregate_after_assessment(
@@ -120,7 +142,11 @@ class TestAssessQuestionOutcomeUseCase:
         # Arrange
         question_id = sample_question.id
         sample_study_session.questions[question_id] = SessionQuestion(
-            question_id=question_id, attempts=1
+            question_id=question_id, attempts=[
+                AnswerAttempt(user_answer=Answer("Attempt 1"),
+                              assessment=None
+                )
+            ]
         )
         learning_plan_repository.save(sample_learning_plan)
         question_repository.save(sample_question)
@@ -139,7 +165,6 @@ class TestAssessQuestionOutcomeUseCase:
             learning_plan_id=sample_learning_plan.id,
             study_session_id=sample_study_session.id,
             question_id=question_id,
-            user_answer=Answer("Correct answer"),
         )
 
         # Assert
@@ -167,7 +192,6 @@ class TestAssessQuestionOutcomeUseCase:
                 learning_plan_id="non-existent-id",
                 study_session_id="session-id",
                 question_id=QuestionID("question-id"),
-                user_answer=Answer("Some answer"),
             )
 
     @staticmethod
@@ -194,7 +218,6 @@ class TestAssessQuestionOutcomeUseCase:
                 learning_plan_id=sample_learning_plan.id,
                 study_session_id="non-existent-session-id",
                 question_id=QuestionID("question-id"),
-                user_answer=Answer("Some answer"),
             )
 
     @staticmethod
@@ -222,7 +245,6 @@ class TestAssessQuestionOutcomeUseCase:
                 learning_plan_id=sample_learning_plan.id,
                 study_session_id=sample_study_session.id,
                 question_id=QuestionID("non-existent-question-id"),
-                user_answer=Answer("Some answer"),
             )
 
     @staticmethod
@@ -236,7 +258,11 @@ class TestAssessQuestionOutcomeUseCase:
         # Arrange
         question_id = QuestionID(str(uuid.uuid4()))
         sample_study_session.questions[question_id] = SessionQuestion(
-            question_id=question_id, attempts=1
+            question_id=question_id, attempts=[
+                AnswerAttempt(user_answer=Answer("Attempt 1"),
+                              assessment=None
+                )
+            ]
         )
         learning_plan_repository.save(sample_learning_plan)
         # Note: not saving question to repository
@@ -255,5 +281,4 @@ class TestAssessQuestionOutcomeUseCase:
                 learning_plan_id=sample_learning_plan.id,
                 study_session_id=sample_study_session.id,
                 question_id=question_id,
-                user_answer=Answer("Some answer"),
             )
