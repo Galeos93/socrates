@@ -15,7 +15,9 @@ como entra aquí el tema de Comet:
 - El icono de usuario sirve para algo?
 - El parseo del PDF es tremendamente lento
 - Hay preguntas muy parecidas, seguramente de un mismo knowledge unit, hay que ver por qué
+- Revisar que tal son los knowledges generados
 - El sistema debe decir por qué la pregunta es correcta o incorrecta
+- Esconder el "hint" de socrates a no ser que se le alimente con la respuesta correcta
 - Debe haber varios intentos por pregunta (?)
 - Comprobar que la dificultad verdaderamente se ajusta con el mastery
 - No puedo generar un nuevo plan de aprendizaje si ya tengo uno creado
