@@ -82,7 +82,20 @@ def mock_question_generator():
             knowledge_unit_id=ku.id,
         )
 
+    def generate_batch(ku, count):
+        return [
+            Question(
+                id=QuestionID(str(uuid.uuid4())),
+                text=f"What is {ku.description}? (Question {i+1})",
+                difficulty=Difficulty(level=2),
+                correct_answer=Answer("Python is a high-level programming language"),
+                knowledge_unit_id=ku.id,
+            )
+            for i in range(count)
+        ]
+
     mock.generate_next_question.side_effect = generate_question
+    mock.generate_questions_batch.side_effect = generate_batch
     return mock
 
 @pytest.fixture

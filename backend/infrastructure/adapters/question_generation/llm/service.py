@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 from typing import Callable
 import uuid
+import json
 
 from domain.entities.knowledge_unit import KnowledgeUnit, FactKnowledge, SkillKnowledge
 from domain.entities.question import Question, Difficulty, Answer
 from domain.ports.question_generation import QuestionGenerationService
 from infrastructure.adapters.answer_evaluation import create_openai_llm_call
 from infrastructure.adapters.question_generation.llm.prompts import build_question_creation_prompt
+from infrastructure.adapters.question_generation.llm.batch_prompts import build_batch_question_creation_prompt
 from infrastructure.adapters.question_generation.llm.openai_client import create_openai_llm_call
 
 
@@ -40,7 +42,6 @@ class LLMQuestionGenerationService(QuestionGenerationService):
         raw_output = self.llm_call(prompt)
 
         # --- 3. Parse JSON output ---
-        import json
         try:
             data = json.loads(raw_output)
             question_text = data["question_text"]
@@ -62,3 +63,54 @@ class LLMQuestionGenerationService(QuestionGenerationService):
         )
 
         return question
+
+    def generate_questions_batch(self, ku: KnowledgeUnit, count: int) -> list[Question]:
+        """
+        Generate multiple diverse questions for a KnowledgeUnit using an LLM.
+
+        Parameters
+        ----------
+        ku : KnowledgeUnit
+            The fact or skill to generate questions for.
+        count : int
+            Number of questions to generate.
+
+        Returns
+        -------
+        list[Question]
+        """
+        # --- 1. Build batch prompt ---
+        prompt = build_batch_question_creation_prompt(ku, count)
+
+        # --- 2. Call the LLM ---
+        raw_output = self.llm_call(prompt)
+
+        # --- 3. Parse JSON output ---
+        try:
+            data = json.loads(raw_output)
+            questions_data = data["questions"]
+        except (json.JSONDecodeError, KeyError):
+            # fallback: use single question generation
+            return [self.generate_next_question(ku) for _ in range(count)]
+
+        # --- 4. Construct Questions ---
+        questions = []
+        for q_data in questions_data[:count]:  # Ensure we don't exceed requested count
+            try:
+                question = Question(
+                    id=str(uuid.uuid4()),
+                    text=q_data["question_text"],
+                    correct_answer=Answer(q_data["answer"]),
+                    difficulty=Difficulty(level=q_data.get("difficulty_level", 2)),
+                    knowledge_unit_id=ku.id
+                )
+                questions.append(question)
+            except KeyError:
+                # Skip malformed questions
+                continue
+
+        # If we didn't get enough valid questions, fill with single generations
+        while len(questions) < count:
+            questions.append(self.generate_next_question(ku))
+
+        return questions

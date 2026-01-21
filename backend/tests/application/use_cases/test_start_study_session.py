@@ -43,14 +43,17 @@ class TestStartStudySessionUseCase:
         mock_policy.select_knowledge_units.return_value = sample_knowledge_units[:1]
 
         mock_question_gen = Mock(spec=QuestionGenerationService)
-        sample_question = Question(
-            id=QuestionID(str(uuid.uuid4())),
-            text="Test question",
-            difficulty=Difficulty(level=2),
-            correct_answer=Answer("Test answer"),
-            knowledge_unit_id=sample_knowledge_units[0].id,
-        )
-        mock_question_gen.generate_next_question.return_value = sample_question
+        sample_questions = [
+            Question(
+                id=QuestionID(str(uuid.uuid4())),
+                text=f"Test question {i}",
+                difficulty=Difficulty(level=2),
+                correct_answer=Answer("Test answer"),
+                knowledge_unit_id=sample_knowledge_units[0].id,
+            )
+            for i in range(5)
+        ]
+        mock_question_gen.generate_questions_batch.return_value = sample_questions
 
         use_case = StartStudySessionUseCase(
             learning_plan_repository=learning_plan_repository,
@@ -82,33 +85,20 @@ class TestStartStudySessionUseCase:
         mock_policy = Mock(spec=StudyFocusPolicy)
         mock_policy.select_knowledge_units.return_value = sample_knowledge_units
 
-        generated_questions = []
-        for ku in sample_knowledge_units:
-            q_1 = Question(
-                id=QuestionID(str(uuid.uuid4())),
-                text=f"Question about {ku.description}",
-                difficulty=Difficulty(level=2),
-                correct_answer=Answer("Answer"),
-                knowledge_unit_id=ku.id,
-            )
-            q_2 = Question(
-                id=QuestionID(str(uuid.uuid4())),
-                text=f"Another question about {ku.description}",
-                difficulty=Difficulty(level=3),
-                correct_answer=Answer("Answer"),
-                knowledge_unit_id=ku.id,
-            )
-            q_3 = Question(
-                id=QuestionID(str(uuid.uuid4())),
-                text=f"Third question about {ku.description}",
-                difficulty=Difficulty(level=4),
-                correct_answer=Answer("Answer"),
-                knowledge_unit_id=ku.id,
-            )
-            generated_questions.extend([q_1, q_2, q_3])
+        def generate_batch(ku, count):
+            return [
+                Question(
+                    id=QuestionID(str(uuid.uuid4())),
+                    text=f"Question {i} about {ku.description}",
+                    difficulty=Difficulty(level=2 + i),
+                    correct_answer=Answer("Answer"),
+                    knowledge_unit_id=ku.id,
+                )
+                for i in range(count)
+            ]
 
         mock_question_gen = Mock(spec=QuestionGenerationService)
-        mock_question_gen.generate_next_question.side_effect = generated_questions
+        mock_question_gen.generate_questions_batch.side_effect = generate_batch
 
         use_case = StartStudySessionUseCase(
             learning_plan_repository=learning_plan_repository,
@@ -123,7 +113,8 @@ class TestStartStudySessionUseCase:
 
         # Assert
         assert len(result.questions) == 5
-        assert mock_question_gen.generate_next_question.call_count == 5
+        # With 3 KUs and 5 questions, should be called 3 times (2,2,1 distribution or 2,1,2 etc.)
+        assert mock_question_gen.generate_questions_batch.call_count == len(sample_knowledge_units)
 
     @staticmethod
     def test_persists_questions_to_repository(
@@ -139,16 +130,19 @@ class TestStartStudySessionUseCase:
         mock_policy = Mock(spec=StudyFocusPolicy)
         mock_policy.select_knowledge_units.return_value = sample_knowledge_units[:1]
 
-        sample_question = Question(
-            id=QuestionID(str(uuid.uuid4())),
-            text="Test question",
-            difficulty=Difficulty(level=2),
-            correct_answer=Answer("Test answer"),
-            knowledge_unit_id=sample_knowledge_units[0].id,
-        )
+        sample_questions = [
+            Question(
+                id=QuestionID(str(uuid.uuid4())),
+                text=f"Test question {i}",
+                difficulty=Difficulty(level=2),
+                correct_answer=Answer("Test answer"),
+                knowledge_unit_id=sample_knowledge_units[0].id,
+            )
+            for i in range(5)
+        ]
 
         mock_question_gen = Mock(spec=QuestionGenerationService)
-        mock_question_gen.generate_next_question.return_value = sample_question
+        mock_question_gen.generate_questions_batch.return_value = sample_questions
 
         use_case = StartStudySessionUseCase(
             learning_plan_repository=learning_plan_repository,
@@ -162,9 +156,11 @@ class TestStartStudySessionUseCase:
         use_case.execute(sample_learning_plan.id)
 
         # Assert
-        persisted_question = question_repository.get_by_id(sample_question.id)
-        assert persisted_question is not None
-        assert persisted_question.id == sample_question.id
+        # Check that all questions were persisted
+        for sample_question in sample_questions:
+            persisted_question = question_repository.get_by_id(sample_question.id)
+            assert persisted_question is not None
+            assert persisted_question.id == sample_question.id
 
     @staticmethod
     def test_adds_session_to_learning_plan(
@@ -182,14 +178,17 @@ class TestStartStudySessionUseCase:
         mock_policy.select_knowledge_units.return_value = sample_knowledge_units[:1]
 
         mock_question_gen = Mock(spec=QuestionGenerationService)
-        sample_question = Question(
-            id=QuestionID(str(uuid.uuid4())),
-            text="Test question",
-            difficulty=Difficulty(level=2),
-            correct_answer=Answer("Test answer"),
-            knowledge_unit_id=sample_knowledge_units[0].id,
-        )
-        mock_question_gen.generate_next_question.return_value = sample_question
+        sample_questions = [
+            Question(
+                id=QuestionID(str(uuid.uuid4())),
+                text=f"Test question {i}",
+                difficulty=Difficulty(level=2),
+                correct_answer=Answer("Test answer"),
+                knowledge_unit_id=sample_knowledge_units[0].id,
+            )
+            for i in range(5)
+        ]
+        mock_question_gen.generate_questions_batch.return_value = sample_questions
 
         use_case = StartStudySessionUseCase(
             learning_plan_repository=learning_plan_repository,

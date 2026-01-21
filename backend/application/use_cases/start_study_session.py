@@ -49,16 +49,22 @@ class StartStudySessionUseCase:
         if not knowledge_units:
             raise ValueError("No knowledge units selected for study session")
 
-        # 3. Generate questions (round-robin over KUs)
+        # 3. Generate questions using batch generation to avoid repetition
         questions: list[Question] = []
-        ku_cycle = itertools.cycle(knowledge_units)
-
-        # TODO: This policy should be a class attribute
-        while len(questions) < self.max_questions:
-            ku = next(ku_cycle)
-            question: Question = self.question_generator.generate_next_question(ku)
-            self.question_repository.save(question)
-            questions.append(question)
+        
+        # Calculate how many questions per KU
+        questions_per_ku = self.max_questions // len(knowledge_units)
+        remaining_questions = self.max_questions % len(knowledge_units)
+        
+        # Generate batch of questions for each KU
+        for i, ku in enumerate(knowledge_units):
+            # Distribute remaining questions to first KUs
+            count = questions_per_ku + (1 if i < remaining_questions else 0)
+            if count > 0:
+                batch = self.question_generator.generate_questions_batch(ku, count)
+                for question in batch:
+                    self.question_repository.save(question)
+                    questions.append(question)
 
         # 4. Create study session
         session = StudySession(

@@ -1,12 +1,21 @@
 - fix frontend as a result!
 Problem: no limit or quality assessment on knowledge units.
 Problem or enhancement: the question generated must not hallucinate and asks things non related to the knowledge unit.
-PROBLEM: Source CLAIM is unknown!! according to the source claim? What are informal ways to discuss ideas according to the source claim?
-PROBLEM: Complete session?
-PROBLEM: 1 out of??
 
 como entra aquí el tema de Comet:
 
 - Assess if answer is correct
 - Assess if questions are relevant
-- 
+
+
+# TBD
+
+- La barra de arriba sirve para algo?
+- Borrar preguntas IGUALES a mano
+- El icono de usuario sirve para algo?
+- El parseo del PDF es tremendamente lento
+- Hay preguntas muy parecidas, seguramente de un mismo knowledge unit, hay que ver por qué
+- El sistema debe decir por qué la pregunta es correcta o incorrecta
+- Debe haber varios intentos por pregunta (?)
+- Comprobar que la dificultad verdaderamente se ajusta con el mastery
+- No puedo generar un nuevo plan de aprendizaje si ya tengo uno creado

@@ -22,3 +22,25 @@ class QuestionGenerationService(ABC):
         Question
         """
         pass
+
+    @abstractmethod
+    def generate_questions_batch(
+        self,
+        ku: KnowledgeUnit,
+        count: int
+    ) -> list[Question]:
+        """Generate multiple diverse questions for a KnowledgeUnit.
+
+        Parameters
+        ----------
+        ku: KnowledgeUnit
+            The fact or skill to generate questions for.
+        count: int
+            Number of questions to generate.
+
+        Returns
+        -------
+        list[Question]
+            A list of diverse questions for the knowledge unit.
+        """
+        pass
