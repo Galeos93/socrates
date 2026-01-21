@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import logging
 
 from domain.ports.learning_plan_repository import LearningPlanRepository
 from domain.ports.question_repository import QuestionRepository
@@ -23,7 +24,7 @@ class UpdateKnowledgeUnitMasteryUseCase:
         learning_plan_id: str,
         knowledge_unit_id: str,
     ) -> KnowledgeUnit:
-
+        logging.info("[UpdateKnowledgeUnitMasteryUseCase] Updating knowledge unit mastery.")
         # 1. Load aggregate root
         plan = self.learning_plan_repository.get_by_id(learning_plan_id)
         if not plan:
@@ -45,16 +46,13 @@ class UpdateKnowledgeUnitMasteryUseCase:
                 if sq.knowledge_unit_id == ku.id and sq.status != QuestionStatus.PENDING:
                     session_questions.append(sq)
 
-        # 4. Calculate mastery
-        new_mastery = self.mastery_service.update_mastery(
-            knowledge_unit=ku,
+        # 4. Update mastery
+        self.mastery_service.update_mastery(
+            ku=ku,
             session_questions=session_questions,
         )
 
-        # 5. Apply mastery
-        ku.mastery_level = new_mastery
-
-        # 6. Persist aggregate
+        # 5. Persist aggregate
         self.learning_plan_repository.save(plan)
 
         return ku

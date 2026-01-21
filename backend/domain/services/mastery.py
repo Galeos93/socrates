@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from domain.entities.knowledge_unit import KnowledgeUnit
-from domain.entities.question import SessionQuestion
+from domain.entities.question import SessionQuestion, AnswerAssessment
 
 
 class MasteryService(ABC):
@@ -31,17 +31,16 @@ class MasteryService(ABC):
 
 
 class QuestionBasedMasteryService(MasteryService):
-    """Computes mastery based on session-level question outcomes.
-
-    Notes
-    -----
-
-    Rules:
-    - Correct answers increase mastery
-    - Incorrect answers decrease mastery
-    - Multiple attempts penalize mastery
-
     """
+    Computes mastery based on session-level question outcomes.
+
+    Rules
+    -----
+    - Only assessed attempts are considered
+    - Latest assessed attempt determines correctness
+    - Multiple attempts reduce score
+    """
+
     def update_mastery(
         self,
         ku: KnowledgeUnit,
@@ -57,24 +56,30 @@ class QuestionBasedMasteryService(MasteryService):
         if not session_questions:
             return 0.0
 
-        score = 0.0
+        total_score = 0.0
         max_score = 0.0
 
         for sq in session_questions:
-            if sq.is_correct is None:
-                continue
+            assessed_attempts = [
+                a for a in sq.attempts if a.assessment is not None
+            ]
 
-            # Base score per question
+            if not assessed_attempts:
+                continue  # unanswered → no contribution
+
+            latest_attempt = assessed_attempts[-1]
+            assessment: AnswerAssessment = latest_attempt.assessment
+
             max_score += 1.0
 
-            if sq.is_correct:
-                # Penalize retries
-                penalty = max(0.0, 1.0 - 0.2 * (sq.attempts - 1))
-                score += penalty
+            if assessment.is_correct:
+                attempts_count = len(assessed_attempts)
+                penalty = max(0.0, 1.0 - 0.2 * (attempts_count - 1))
+                total_score += penalty
             else:
-                score += 0.0
+                total_score += 0.0
 
-        if max_score == 0:
+        if max_score == 0.0:
             return 0.0
 
-        return min(1.0, score / max_score)
+        return min(1.0, total_score / max_score)

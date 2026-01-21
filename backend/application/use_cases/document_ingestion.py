@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import logging
 
 from domain.entities.document import Document, DocumentID
 from domain.ports.document_parser import DocumentParser
@@ -39,6 +40,8 @@ class IngestDocumentUseCase:
         ValueError
             If the file format is not supported or parsing fails.
         """
+        logging.info("[IngestDocumentUseCase] Starting document ingestion.")
+
         # Parse raw bytes into Document entity
         document = self.document_parser.parse(file_bytes, filename)
 

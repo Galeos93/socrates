@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Home, BookOpen, Brain, CheckCircle, ChevronRight, Upload, Loader2, Sparkles, BookText, BarChart2 } from 'lucide-react';
 import { api } from './services/api';
-import { StudySessionView, Question, AssessmentResponse } from './types';
+import { StudySessionView, Question, AssessmentResponse, LearningPlanDetails } from './types';
 import { geminiService } from './services/geminiService';
 
 // --- Sub-components ---
@@ -59,6 +59,7 @@ const App: React.FC = () => {
   // App State
   const [documentId, setDocumentId] = useState<string | null>(null);
   const [learningPlanId, setLearningPlanId] = useState<string | null>(null);
+  const [learningPlanDetails, setLearningPlanDetails] = useState<LearningPlanDetails | null>(null);
   const [session, setSession] = useState<StudySessionView | null>(null);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [answer, setAnswer] = useState('');
@@ -78,6 +79,11 @@ const App: React.FC = () => {
       // Immediately create a learning plan for simplicity in this flow
       const planRes = await api.createLearningPlan([res.document_id]);
       setLearningPlanId(planRes.learning_plan_id);
+      
+      // Fetch the full learning plan details with mastery
+      const planDetails = await api.getLearningPlan(planRes.learning_plan_id);
+      setLearningPlanDetails(planDetails);
+      
       setStep(1);
     } catch (err) {
       setError("Failed to process document. Ensure the backend is running at http://localhost:8000");
@@ -111,15 +117,19 @@ const App: React.FC = () => {
     
     setLoading(true);
     try {
-      // 1. First, register the attempt
-      await api.submitAnswer(learningPlanId, session.id, q.id);
+      // 1. Submit answer with the user content in body
+      await api.submitAnswer(learningPlanId, session.id, q.id, answer);
 
-      // 2. Then, perform the actual assessment
-      const res = await api.assessQuestion(learningPlanId, session.id, q.id, answer);
+      // 2. Assess the question (server already has the answer)
+      const res = await api.assessQuestion(learningPlanId, session.id, q.id);
       setAssessment(res);
-      
+
       // Update mastery in background
       await api.updateMastery(learningPlanId, q.knowledge_unit_id);
+      
+      // Refresh learning plan details to get updated mastery
+      const planDetails = await api.getLearningPlan(learningPlanId);
+      setLearningPlanDetails(planDetails);
     } catch (err) {
       setError("Failed to assess answer.");
     } finally {
@@ -128,13 +138,15 @@ const App: React.FC = () => {
   };
 
   const nextQuestion = () => {
-    if (currentQuestionIdx < (session?.questions.length || 0) - 1) {
+    if (!session) return;
+    
+    if (currentQuestionIdx < session.questions.length - 1) {
       setCurrentQuestionIdx(prev => prev + 1);
       setAnswer('');
       setAssessment(null);
       setHint(null);
     } else {
-      // Completed session
+      // Completed session - go back to plan summary
       setStep(1); 
     }
   };
@@ -228,14 +240,19 @@ const App: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
               <div className="p-6 bg-slate-50 rounded-2xl">
                 <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Knowledge Units</p>
-                <p className="text-4xl font-bold text-slate-900">24</p>
+                <p className="text-4xl font-bold text-slate-900">{learningPlanDetails?.knowledge_unit_count || 0}</p>
                 <p className="text-sm text-slate-500 mt-1">Identified from document</p>
               </div>
               <div className="p-6 bg-slate-50 rounded-2xl">
                 <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Current Mastery</p>
-                <p className="text-4xl font-bold text-slate-900">0%</p>
+                <p className="text-4xl font-bold text-slate-900">
+                  {learningPlanDetails ? Math.round(learningPlanDetails.average_mastery * 100) : 0}%
+                </p>
                 <div className="w-full h-2 bg-slate-200 rounded-full mt-3">
-                  <div className="w-0 h-full bg-indigo-600 rounded-full" />
+                  <div 
+                    className="h-full bg-indigo-600 rounded-full transition-all duration-500" 
+                    style={{ width: `${learningPlanDetails ? learningPlanDetails.average_mastery * 100 : 0}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -281,11 +298,11 @@ const App: React.FC = () => {
               <div className="flex-grow bg-slate-200 h-2 rounded-full overflow-hidden">
                 <div 
                   className="bg-indigo-600 h-full transition-all duration-500" 
-                  style={{ width: `${(currentQuestionIdx / session.max_questions) * 100}%` }}
+                  style={{ width: `${(currentQuestionIdx / session.questions.length) * 100}%` }}
                 />
               </div>
               <span className="text-sm font-bold text-slate-500">
-                {currentQuestionIdx + 1} of {session.max_questions}
+                {currentQuestionIdx + 1} of {session.questions.length}
               </span>
             </div>
 
@@ -357,7 +374,7 @@ const App: React.FC = () => {
                         : 'bg-slate-900 hover:bg-slate-800 text-white'
                       }`}
                     >
-                      {currentQuestionIdx < session.max_questions - 1 ? "Next Question" : "Complete Session"}
+                      {currentQuestionIdx < session.questions.length - 1 ? "Next Question" : "Complete Session"}
                     </button>
                   </div>
                 )}

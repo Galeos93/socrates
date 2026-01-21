@@ -14,6 +14,7 @@ from application.use_cases.create_learning_plan import (
     CreateLearningPlanFromDocumentUseCase,
 )
 from application.use_cases.document_ingestion import IngestDocumentUseCase
+from application.use_cases.get_learning_plan import GetLearningPlanUseCase
 from application.use_cases.get_study_session import GetStudySessionViewUseCase
 from application.use_cases.start_study_session import StartStudySessionUseCase
 from application.use_cases.submit_answer import SubmitAnswerUseCase
@@ -45,6 +46,7 @@ from infrastructure.api.fastapi.assess_question_api import AssessQuestionAPIImpl
 from infrastructure.api.fastapi.create_learning_plan_api import (
     CreateLearningPlanAPIImpl,
 )
+from infrastructure.api.fastapi.get_learning_plan_api import GetLearningPlanAPIImpl
 from infrastructure.api.fastapi.get_study_session_api import GetStudySessionAPIImpl
 from infrastructure.api.fastapi.ingest_document_api import IngestDocumentAPIBase
 from infrastructure.api.fastapi.start_study_session_api import StartStudySessionAPIImpl
@@ -164,6 +166,13 @@ def get_create_learning_plan_use_case() -> CreateLearningPlanFromDocumentUseCase
     )
 
 
+def get_learning_plan_use_case() -> GetLearningPlanUseCase:
+    """Create get learning plan use case instance."""
+    return GetLearningPlanUseCase(
+        learning_plan_repository=get_learning_plan_repository(),
+    )
+
+
 def get_start_study_session_use_case() -> StartStudySessionUseCase:
     """Create start study session use case instance."""
     max_questions = v.get_int("study_session.max_questions")
@@ -219,6 +228,13 @@ def get_create_learning_plan_api() -> CreateLearningPlanAPIImpl:
     return CreateLearningPlanAPIImpl(
         create_learning_plan_use_case=get_create_learning_plan_use_case(),
         document_repository=get_document_repository(),
+    )
+
+
+def get_learning_plan_api() -> GetLearningPlanAPIImpl:
+    """Create get learning plan API instance."""
+    return GetLearningPlanAPIImpl(
+        get_learning_plan_use_case=get_learning_plan_use_case(),
     )
 
 

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import logging
 
 from domain.ports.learning_plan_repository import LearningPlanRepository
 from domain.ports.question_repository import QuestionRepository
@@ -7,6 +8,7 @@ from domain.entities.question import (
     QuestionID, AnswerAssessment, SessionQuestion, AnswerAttempt
 )
 from domain.entities.learning import StudySessionID
+
 
 
 @dataclass
@@ -26,6 +28,8 @@ class AssessQuestionOutcomeUseCase:
         study_session_id: StudySessionID,
         question_id: QuestionID,
     ) -> AnswerAssessment:
+        logging.info("[AssessQuestionOutcomeUseCase] Assessing question outcome.")
+
         # 1. Load aggregate root
         learning_plan = self.learning_plan_repository.get_by_id(learning_plan_id)
         if not learning_plan:

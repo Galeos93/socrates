@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import logging
 from typing import List
 from datetime import datetime, UTC
 import uuid
@@ -29,6 +30,7 @@ class CreateLearningPlanFromDocumentUseCase:
     learning_plan_repository: LearningPlanRepository
 
     def execute(self, documents: List[Document]) -> LearningPlan:
+        logging.info("[CreateLearningPlanFromDocumentUseCase] Creating learning plan from documents.")
         # 1. Generate knowledge units from the document
         knowledge_units = self.ku_generator.generate_knowledge_units(documents)
 

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import logging
 
 from application.dto.study_session_view import StudySessionView
 from application.services.study_session_view import StudySessionViewService
@@ -17,6 +18,7 @@ class GetStudySessionViewUseCase:
         learning_plan_id: str,
         study_session_id: str,
     ) -> StudySessionView:
+        logging.info("[GetStudySessionViewUseCase] Retrieving study session view.")
         plan = self.learning_plan_repo.get_by_id(learning_plan_id)
         if not plan:
             raise ValueError("LearningPlan not found")

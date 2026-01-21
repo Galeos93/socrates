@@ -22,9 +22,10 @@ class StudySessionViewService:
         question_views = [
             QuestionView(
                 id=question.id,
+                knowledge_unit_id=question.knowledge_unit_id,
                 text=question.text,
                 status=session_question.status,
-                attempts=session_question.attempts,
+                attempts=len(session_question.attempts),
             )
             for session_question, question in zip(session_questions, questions)
         ]

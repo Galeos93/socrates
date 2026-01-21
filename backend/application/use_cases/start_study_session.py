@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime, UTC
-import uuid
 import itertools
+import logging
+import uuid
 
 from domain.entities.learning import StudySession, LearningPlan
 from domain.entities.question import Question, SessionQuestion
@@ -31,6 +32,7 @@ class StartStudySessionUseCase:
     max_knowledge_units: int = 3
 
     def execute(self, learning_plan_id: str) -> StudySession:
+        logging.info("[StartStudySessionUseCase] Starting new study session.")
         # 1. Load learning plan
         learning_plan: LearningPlan | None = (
             self.learning_plan_repository.get_by_id(learning_plan_id)

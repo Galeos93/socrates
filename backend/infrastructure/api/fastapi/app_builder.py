@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from infrastructure.api.fastapi.create_learning_plan_api import CreateLearningPlanAPIBase
+from infrastructure.api.fastapi.get_learning_plan_api import GetLearningPlanAPIBase
 from infrastructure.api.fastapi.start_study_session_api import StartStudySessionAPIBase
 from infrastructure.api.fastapi.get_study_session_api import GetStudySessionAPIBase
 from infrastructure.api.fastapi.submit_answer_api import SubmitAnswerAPIBase
@@ -19,6 +20,7 @@ class AppBuilder:
     
     ingest_document_api: Optional[IngestDocumentAPIBase] = None
     create_learning_plan_api: Optional[CreateLearningPlanAPIBase] = None
+    get_learning_plan_api: Optional[GetLearningPlanAPIBase] = None
     start_study_session_api: Optional[StartStudySessionAPIBase] = None
     get_study_session_api: Optional[GetStudySessionAPIBase] = None
     submit_answer_api: Optional[SubmitAnswerAPIBase] = None
@@ -32,6 +34,8 @@ class AppBuilder:
     def register_learning_plan_routes(self, app: FastAPI) -> None:
         """Register learning plan routes."""
         app.post("/learning-plans")(self.create_learning_plan_api.create_learning_plan)
+        if self.get_learning_plan_api:
+            app.get("/learning-plans/{learning_plan_id}")(self.get_learning_plan_api.get_learning_plan)
 
     def register_study_session_routes(self, app: FastAPI) -> None:
         """Register study session routes."""

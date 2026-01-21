@@ -26,6 +26,7 @@ class UpdateMasteryAPIImpl(UpdateMasteryAPIBase):
     async def update_mastery(
         self,
         learning_plan_id: str,
+        # FIXME: Maybe KU not needed? Update all?
         knowledge_unit_id: str,
     ) -> dict:
         """Update mastery endpoint implementation."""
@@ -34,7 +35,11 @@ class UpdateMasteryAPIImpl(UpdateMasteryAPIBase):
             knowledge_unit_id=knowledge_unit_id,
         )
         
+        # Extract values to plain types to avoid circular reference during serialization
+        ku_id = str(ku.id)
+        mastery = float(ku.mastery_level)
+        
         return {
-            "knowledge_unit_id": ku.id,
-            "mastery_level": ku.mastery_level,
+            "knowledge_unit_id": ku_id,
+            "mastery_level": mastery,
         }

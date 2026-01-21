@@ -23,6 +23,14 @@ export interface LearningPlanResponse {
   created_at: string;
 }
 
+export interface LearningPlanDetails {
+  learning_plan_id: LearningPlanID;
+  knowledge_unit_count: number;
+  average_mastery: number;
+  created_at: string;
+  completed_at: string | null;
+}
+
 export interface Question {
   id: QuestionID;
   text: string;
@@ -47,7 +55,9 @@ export interface StartSessionResponse {
 export interface AssessmentResponse {
   is_correct: boolean;
   question_id: QuestionID;
-  feedback?: string; // Optional field for AI explanation
+  correct_answer?: string;
+  explanation?: string;
+  feedback?: string; // Kept for backward compatibility if needed
 }
 
 export interface MasteryUpdateResponse {

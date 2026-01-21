@@ -22,6 +22,10 @@ def build_question_creation_prompt(ku: KnowledgeUnit) -> str:
         Fact: {ku.description}
         Source Claim: {source_texts}
 
+        IMPORTANT: The question must be self-contained and answerable WITHOUT seeing the source claim or document.
+        Do NOT use phrases like "according to the source claim", "based on the text", "in the document", etc.
+        The learner will ONLY see the question, not the source material.
+
         Output JSON format only, DO NOT enclose it with
         ``json`` or any other markdown:
         {{
@@ -37,6 +41,10 @@ def build_question_creation_prompt(ku: KnowledgeUnit) -> str:
 
         Skill: {ku.description}
         Source Claims: {claims_texts}
+
+        IMPORTANT: The question must be self-contained and answerable WITHOUT seeing the source claims or document.
+        Do NOT use phrases like "according to the source", "based on the text", "in the document", etc.
+        The learner will ONLY see the question, not the source material.
 
         Output JSON format only, DO NOT enclose it with
         ``json`` or any other markdown:

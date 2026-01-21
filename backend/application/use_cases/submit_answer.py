@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import logging
 
 from domain.ports.learning_plan_repository import LearningPlanRepository
 from domain.entities.question import Answer, QuestionID
@@ -21,6 +22,7 @@ class SubmitAnswerUseCase:
         question_id: QuestionID,
         user_answer: Answer,
     ) -> None:
+        logging.info("[SubmitAnswerUseCase] Submitting answer to question.")
         # 1. Load aggregate root
         learning_plan = self.learning_plan_repository.get_by_id(learning_plan_id)
         if not learning_plan:

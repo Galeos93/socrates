@@ -2,6 +2,10 @@
 import logging
 import sys
 from pathlib import Path
+import requests
+
+# HACK: Disable IPv6 to avoid issues in certain environments.
+requests.packages.urllib3.util.connection.HAS_IPV6 = False
 
 from dotenv import load_dotenv
 import uvicorn
@@ -87,6 +91,7 @@ def create_app():
     app_builder = AppBuilder(
         ingest_document_api=injectors.get_ingest_document_api(),
         create_learning_plan_api=injectors.get_create_learning_plan_api(),
+        get_learning_plan_api=injectors.get_learning_plan_api(),
         start_study_session_api=injectors.get_start_study_session_api(),
         get_study_session_api=injectors.get_get_study_session_api(),
         submit_answer_api=injectors.get_submit_answer_api(),

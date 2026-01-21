@@ -1,7 +1,8 @@
 
 import { 
   IngestResponse, 
-  LearningPlanResponse, 
+  LearningPlanResponse,
+  LearningPlanDetails,
   StartSessionResponse, 
   StudySessionView, 
   AssessmentResponse,
@@ -40,6 +41,13 @@ export const api = {
     return response.json();
   },
 
+  async getLearningPlan(learningPlanId: string): Promise<LearningPlanDetails> {
+    const response = await fetch(`${BASE_URL}/learning-plans/${learningPlanId}`);
+    
+    if (!response.ok) throw new Error('Failed to get learning plan');
+    return response.json();
+  },
+
   async startStudySession(learningPlanId: string): Promise<StartSessionResponse> {
     const response = await fetch(`${BASE_URL}/learning-plans/${learningPlanId}/sessions`, {
       method: 'POST'
@@ -56,10 +64,11 @@ export const api = {
     return response.json();
   },
 
-  async submitAnswer(learningPlanId: string, sessionId: string, questionId: string): Promise<{ status: string }> {
-    // Fix: Changed 'question_id' to 'questionId' to match the function parameter name
+  async submitAnswer(learningPlanId: string, sessionId: string, questionId: string, userAnswer: string): Promise<{ status: string }> {
     const response = await fetch(`${BASE_URL}/learning-plans/${learningPlanId}/sessions/${sessionId}/answers/${questionId}`, {
-      method: 'POST'
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userAnswer), // Sending user answer in Body as requested
     });
     
     if (!response.ok) throw new Error('Failed to submit answer');
@@ -69,12 +78,9 @@ export const api = {
   async assessQuestion(
     learningPlanId: string, 
     sessionId: string, 
-    questionId: string, 
-    userAnswer: string
+    questionId: string
   ): Promise<AssessmentResponse> {
-    // Note: backend uses query parameter for user_answer
-    const params = new URLSearchParams({ user_answer: userAnswer });
-    const response = await fetch(`${BASE_URL}/learning-plans/${learningPlanId}/sessions/${sessionId}/assess/${questionId}?${params.toString()}`, {
+    const response = await fetch(`${BASE_URL}/learning-plans/${learningPlanId}/sessions/${sessionId}/assess/${questionId}`, {
       method: 'POST'
     });
     
