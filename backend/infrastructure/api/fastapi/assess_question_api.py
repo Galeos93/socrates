@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from application.use_cases.assess_question import AssessQuestionOutcomeUseCase
-from domain.entities.question import Answer
+from domain.entities.question import AnswerAssessment
 
-
+# TODO: Convert response into DTO
 class AssessQuestionAPIBase(ABC):
     """Abstract base class for assessing question endpoints."""
 
@@ -14,7 +14,6 @@ class AssessQuestionAPIBase(ABC):
         learning_plan_id: str,
         session_id: str,
         question_id: str,
-        user_answer: str,
     ) -> dict:
         """Assess a question answer."""
         pass
@@ -32,13 +31,15 @@ class AssessQuestionAPIImpl(AssessQuestionAPIBase):
         question_id: str,
     ) -> dict:
         """Assess question endpoint implementation."""
-        is_correct = self.assess_question_use_case.execute(
+        answer_assessment: AnswerAssessment = self.assess_question_use_case.execute(
             learning_plan_id=learning_plan_id,
             study_session_id=session_id,
             question_id=question_id,
         )
-        
+
         return {
-            "is_correct": is_correct,
+            "is_correct": answer_assessment.is_correct,
+            "correct_answer": answer_assessment.correct_answer,
+            "explanation": answer_assessment.explanation,
             "question_id": question_id,
         }

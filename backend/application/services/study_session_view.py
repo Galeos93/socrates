@@ -23,7 +23,7 @@ class StudySessionViewService:
             QuestionView(
                 id=question.id,
                 text=question.text,
-                status=self._status(session_question),
+                status=session_question.status,
                 attempts=session_question.attempts,
             )
             for session_question, question in zip(session_questions, questions)
@@ -39,10 +39,10 @@ class StudySessionViewService:
             is_completed=session.is_completed(),
         )
 
-    @staticmethod
-    def _status(q: SessionQuestion) -> QuestionStatus:
-        if q.attempts == 0:
-            return QuestionStatus.PENDING
-        if q.is_correct:
-            return QuestionStatus.CORRECT
-        return QuestionStatus.INCORRECT
+    # @staticmethod
+    # def _status(q: SessionQuestion) -> QuestionStatus:
+    #     if len(q.attempts) == 0 or q.is_correct is None:
+    #         return QuestionStatus.PENDING
+    #     if q.is_correct:
+    #         return QuestionStatus.CORRECT
+    #     return QuestionStatus.INCORRECT

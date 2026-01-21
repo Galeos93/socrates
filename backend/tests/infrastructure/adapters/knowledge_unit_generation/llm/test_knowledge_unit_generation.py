@@ -2,6 +2,8 @@ import os
 import pytest
 from typing import List
 
+from openai import OpenAI
+
 from domain.entities.claim import Claim
 from domain.entities.document import Document
 from domain.entities.knowledge_unit import FactKnowledge, SkillKnowledge
@@ -15,6 +17,8 @@ from infrastructure.adapters.knowledge_unit_generation.llm.service import LLMKno
     reason="Requires OPENAI_API_KEY environment variable"
 )
 def test_llm_knowledge_unit_generation_spanish_accents():
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
     # --- 1. Setup: sample document ---
     doc = Document(
         id="doc_test_2",
@@ -26,7 +30,7 @@ def test_llm_knowledge_unit_generation_spanish_accents():
     )
 
     # --- 2. Initialize the service ---
-    service = LLMKnowledgeUnitGenerationService(llm_call=openai_llm_call)
+    service = LLMKnowledgeUnitGenerationService(client=client, model="gpt-4o")
 
     # --- 3. Call the service ---
     knowledge_units: List = service.generate_knowledge_units([doc])

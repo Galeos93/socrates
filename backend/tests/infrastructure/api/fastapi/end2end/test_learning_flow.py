@@ -17,7 +17,7 @@ from application.use_cases.update_ku_mastery import UpdateKnowledgeUnitMasteryUs
 from domain.entities.claim import Claim
 from domain.entities.document import Document, DocumentID
 from domain.entities.knowledge_unit import FactKnowledge, KnowledgeUnitID, SkillKnowledge
-from domain.entities.question import Answer, Difficulty, Question, QuestionID
+from domain.entities.question import Answer, Difficulty, Question, QuestionID, AnswerAssessment
 from domain.ports.answer_evaluation import AnswerEvaluationService
 from domain.ports.document_parser import DocumentParser
 from domain.ports.knowledge_unit_generation import KnowledgeUnitGenerationService
@@ -90,7 +90,11 @@ def mock_answer_evaluator():
     """Mock answer evaluation service."""
     mock = Mock(spec=AnswerEvaluationService)
     # Default to correct answers for testing
-    mock.evaluate.return_value = True
+    mock.evaluate.return_value = AnswerAssessment(
+        is_correct=True,
+        correct_answer="Python is a high-level programming language",
+        explanation="The answer is correct because Python is indeed a high-level programming language.",
+    )
     return mock
 
 @pytest.fixture
@@ -276,6 +280,7 @@ class TestCompleteLearningFlow:
         # Step 4: Submit an answer
         response = app_client.post(
             f"/learning-plans/{learning_plan_id}/sessions/{session_id}/answers/{question_id}",
+            json="Python is a high-level programming language",
         )
         assert response.status_code == 200
         assert response.json()["status"] == "answer_submitted"
@@ -283,7 +288,6 @@ class TestCompleteLearningFlow:
         # Step 5: Assess the answer
         response = app_client.post(
             f"/learning-plans/{learning_plan_id}/sessions/{session_id}/assess/{question_id}",
-            params={"user_answer": "Python is a high-level programming language"},
         )
         assert response.status_code == 200
         assessment = response.json()
@@ -296,6 +300,8 @@ class TestCompleteLearningFlow:
             f"/learning-plans/{learning_plan_id}/sessions/{session_id}",
         )
         session_view = response.json()
+        # Progress should now reflect one answered question
+        assert session_view["progress"] == 1/len(session_view["questions"])
 
         # For simplicity, we'll assume we know a KU ID exists
         # In a real scenario, we'd need to expose KU info through the API
@@ -306,7 +312,11 @@ class TestCompleteLearningFlow:
     def test_incorrect_answer_flow(app_client: TestClient, mock_answer_evaluator):
         """Test the flow when an answer is incorrect."""
         # Configure mock to return incorrect
-        mock_answer_evaluator.evaluate.return_value = False
+        mock_answer_evaluator.evaluate.return_value = AnswerAssessment(
+            is_correct=False,
+            correct_answer="Python is a high-level programming language",
+            explanation="The correct answer is that Python is a high-level programming language.",
+        )
 
         # Step 0: Ingest a document
         text_content = "Python is a programming language."
@@ -339,12 +349,12 @@ class TestCompleteLearningFlow:
         # Step 4: Submit wrong answer
         app_client.post(
             f"/learning-plans/{learning_plan_id}/sessions/{session_id}/answers/{question_id}",
+            json="Wrong answer",
         )
 
         # Step 5: Assess the wrong answer
         response = app_client.post(
             f"/learning-plans/{learning_plan_id}/sessions/{session_id}/assess/{question_id}",
-            params={"user_answer": "Wrong answer"},
         )
         assert response.status_code == 200
         assessment = response.json()

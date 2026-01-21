@@ -1,4 +1,3 @@
-- fix answer submission (answer not answerattemps not used at all!)
 - fix frontend as a result!
 Problem: no limit or quality assessment on knowledge units.
 Problem or enhancement: the question generated must not hallucinate and asks things non related to the knowledge unit.

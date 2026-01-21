@@ -84,14 +84,28 @@ class TestStartStudySessionUseCase:
 
         generated_questions = []
         for ku in sample_knowledge_units:
-            q = Question(
+            q_1 = Question(
                 id=QuestionID(str(uuid.uuid4())),
                 text=f"Question about {ku.description}",
                 difficulty=Difficulty(level=2),
                 correct_answer=Answer("Answer"),
                 knowledge_unit_id=ku.id,
             )
-            generated_questions.append(q)
+            q_2 = Question(
+                id=QuestionID(str(uuid.uuid4())),
+                text=f"Another question about {ku.description}",
+                difficulty=Difficulty(level=3),
+                correct_answer=Answer("Answer"),
+                knowledge_unit_id=ku.id,
+            )
+            q_3 = Question(
+                id=QuestionID(str(uuid.uuid4())),
+                text=f"Third question about {ku.description}",
+                difficulty=Difficulty(level=4),
+                correct_answer=Answer("Answer"),
+                knowledge_unit_id=ku.id,
+            )
+            generated_questions.extend([q_1, q_2, q_3])
 
         mock_question_gen = Mock(spec=QuestionGenerationService)
         mock_question_gen.generate_next_question.side_effect = generated_questions
@@ -108,10 +122,8 @@ class TestStartStudySessionUseCase:
         result = use_case.execute(sample_learning_plan.id)
 
         # Assert
-        assert len(result.questions) == len(sample_knowledge_units)
-        assert mock_question_gen.generate_next_question.call_count == len(
-            sample_knowledge_units
-        )
+        assert len(result.questions) == 5
+        assert mock_question_gen.generate_next_question.call_count == 5
 
     @staticmethod
     def test_persists_questions_to_repository(
@@ -214,5 +226,5 @@ class TestStartStudySessionUseCase:
         )
 
         # Act & Assert
-        with pytest.raises(AttributeError):  # Will fail trying to access None
+        with pytest.raises(ValueError):  # Will fail trying to access None
             use_case.execute("non-existent-plan-id")

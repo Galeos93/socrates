@@ -5,6 +5,7 @@ from domain.ports.question_repository import QuestionRepository
 from domain.services.mastery import MasteryService
 from domain.entities.learning import SessionQuestion
 from domain.entities.knowledge_unit import KnowledgeUnit
+from domain.entities.question import QuestionStatus
 
 
 @dataclass
@@ -41,7 +42,7 @@ class UpdateKnowledgeUnitMasteryUseCase:
 
         for session in plan.sessions:
             for sq in session.questions.values():
-                if sq.knowledge_unit_id == ku.id and sq.is_correct is not None:
+                if sq.knowledge_unit_id == ku.id and sq.status != QuestionStatus.PENDING:
                     session_questions.append(sq)
 
         # 4. Calculate mastery

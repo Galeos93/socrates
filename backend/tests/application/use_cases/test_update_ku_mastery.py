@@ -6,7 +6,7 @@ from unittest.mock import Mock
 from application.use_cases.update_ku_mastery import UpdateKnowledgeUnitMasteryUseCase
 from domain.entities.learning import LearningPlan, StudySession
 from domain.entities.knowledge_unit import KnowledgeUnit
-from domain.entities.question import QuestionID, SessionQuestion
+from domain.entities.question import QuestionID, SessionQuestion, AnswerAssessment, AnswerAttempt, QuestionStatus
 from domain.services.mastery import MasteryService
 from infrastructure.adapters.learning_plan_repository import InMemoryLearningPlanRepository
 
@@ -32,8 +32,12 @@ class TestUpdateKnowledgeUnitMasteryUseCase:
         question_id = QuestionID(str(uuid.uuid4()))
         session_question = SessionQuestion(
             question_id=question_id,
-            attempts=1,
-            is_correct=True,
+            attempts=[
+                AnswerAttempt(
+                    user_answer="sample answer",
+                    assessment=AnswerAssessment(is_correct=True)
+                )
+            ],
             knowledge_unit_id=ku.id,
         )
         sample_study_session.questions[question_id] = session_question
@@ -75,8 +79,10 @@ class TestUpdateKnowledgeUnitMasteryUseCase:
         q1_id = QuestionID(str(uuid.uuid4()))
         session1.questions[q1_id] = SessionQuestion(
             question_id=q1_id,
-            attempts=1,
-            is_correct=True,
+            attempts=[AnswerAttempt(
+                user_answer="answer 1",
+                assessment=AnswerAssessment(is_correct=True)
+            )],
             knowledge_unit_id=ku.id,
         )
 
@@ -84,8 +90,16 @@ class TestUpdateKnowledgeUnitMasteryUseCase:
         q2_id = QuestionID(str(uuid.uuid4()))
         session2.questions[q2_id] = SessionQuestion(
             question_id=q2_id,
-            attempts=2,
-            is_correct=False,
+            attempts=[
+                AnswerAttempt(
+                    user_answer="answer 2",
+                    assessment=AnswerAssessment(is_correct=False)
+                ),
+                AnswerAttempt(
+                    user_answer="answer 2 - retry",
+                    assessment=AnswerAssessment(is_correct=True)
+                )
+            ],
             knowledge_unit_id=ku.id,
         )
 
@@ -125,8 +139,12 @@ class TestUpdateKnowledgeUnitMasteryUseCase:
         q1_id = QuestionID(str(uuid.uuid4()))
         sample_study_session.questions[q1_id] = SessionQuestion(
             question_id=q1_id,
-            attempts=1,
-            is_correct=True,
+            attempts=[
+                AnswerAttempt(
+                    user_answer="answer 1",
+                    assessment=AnswerAssessment(is_correct=True)
+                )
+            ],
             knowledge_unit_id=ku.id,
         )
 
@@ -134,8 +152,7 @@ class TestUpdateKnowledgeUnitMasteryUseCase:
         q2_id = QuestionID(str(uuid.uuid4()))
         sample_study_session.questions[q2_id] = SessionQuestion(
             question_id=q2_id,
-            attempts=0,
-            is_correct=None,
+            attempts=[],
             knowledge_unit_id=ku.id,
         )
 
@@ -159,7 +176,7 @@ class TestUpdateKnowledgeUnitMasteryUseCase:
         call_args = mock_mastery_service.update_mastery.call_args
         session_questions = call_args[1]["session_questions"]
         assert len(session_questions) == 1
-        assert session_questions[0].is_correct is True
+        assert session_questions[0].status == QuestionStatus.CORRECT
 
     @staticmethod
     def test_persists_learning_plan_after_mastery_update(
@@ -173,8 +190,12 @@ class TestUpdateKnowledgeUnitMasteryUseCase:
         question_id = QuestionID(str(uuid.uuid4()))
         session_question = SessionQuestion(
             question_id=question_id,
-            attempts=1,
-            is_correct=True,
+            attempts=[
+                AnswerAttempt(
+                    user_answer="sample answer",
+                    assessment=AnswerAssessment(is_correct=True)
+                )
+            ],
             knowledge_unit_id=ku.id,
         )
         sample_study_session.questions[question_id] = session_question

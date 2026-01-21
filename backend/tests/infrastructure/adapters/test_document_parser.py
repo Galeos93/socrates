@@ -1,11 +1,22 @@
-import pytest
-from unittest.mock import Mock, MagicMock
-import os
-from PIL import Image
 import io
+import os
+from pathlib import Path
+from unittest.mock import Mock, MagicMock
+
+from PIL import Image
+import pytest
 
 from infrastructure.adapters.document_parser import LLMOCRDocumentParser
 from domain.entities.document import Document
+from tests import resources
+
+RESOURCES_FOLDER = Path(resources.__file__).parent
+
+
+@pytest.fixture
+def real_pdf_path() -> Path:
+    """Path to a real PDF file for integration tests."""
+    return RESOURCES_FOLDER / "test_document.pdf"
 
 
 class TestLLMOCRDocumentParser:
@@ -118,7 +129,7 @@ class TestLLMOCRDocumentParserIntegration:
         os.getenv("OPENAI_API_KEY") is None,
         reason="Requires OPENAI_API_KEY environment variable"
     )
-    def test_parse_real_pdf():
+    def test_parse_real_pdf(real_pdf_path):
         """Test parsing a real PDF with OpenAI API."""
         from openai import OpenAI
         
@@ -131,11 +142,11 @@ class TestLLMOCRDocumentParserIntegration:
         parser = LLMOCRDocumentParser(client=client)
         
         # Load a real PDF
-        with open("test_document.pdf", "rb") as f:
+        with open(real_pdf_path, "rb") as f:
             pdf_bytes = f.read()
         
         # Parse it
-        document = parser.parse(pdf_bytes, "test_document.pdf")
+        document = parser.parse(pdf_bytes, real_pdf_path.name)
         
         # Verify we got text
         assert len(document.text) > 0

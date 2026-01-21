@@ -73,7 +73,6 @@ class SessionQuestion:
     """
     question_id: QuestionID
     attempts: list[AnswerAttempt] = field(default_factory=list)
-    is_correct: bool | None = None  # None = unanswered
     last_answered_at: datetime | None = None
     knowledge_unit_id: KnowledgeUnitID | None = None
 
@@ -107,10 +106,17 @@ class SessionQuestion:
         )
 
     @property
-    def status(self) -> str:
-        if self.is_correct is None:
-            return QuestionStatus.PENDING.value
-        elif self.is_correct:
-            return QuestionStatus.CORRECT.value
-        else:
-            return QuestionStatus.INCORRECT.value
+    def status(self) -> QuestionStatus:
+        if not self.attempts:
+            return QuestionStatus.PENDING
+
+        # Use last assessed attempt
+        for attempt in reversed(self.attempts):
+            if attempt.assessment is not None:
+                return (
+                    QuestionStatus.CORRECT
+                    if attempt.assessment.is_correct
+                    else QuestionStatus.INCORRECT
+                )
+
+        return QuestionStatus.PENDING

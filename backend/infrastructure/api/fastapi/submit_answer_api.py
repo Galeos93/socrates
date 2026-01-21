@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from fastapi import Body
+
 from application.use_cases.submit_answer import SubmitAnswerUseCase
 from domain.entities.question import Answer
 
@@ -14,7 +16,7 @@ class SubmitAnswerAPIBase(ABC):
         learning_plan_id: str,
         session_id: str,
         question_id: str,
-        user_answer: Answer
+        user_answer: Answer = Body(...),
     ) -> dict:
         """Submit an answer to a question."""
         pass
@@ -30,7 +32,7 @@ class SubmitAnswerAPIImpl(SubmitAnswerAPIBase):
         learning_plan_id: str,
         session_id: str,
         question_id: str,
-        user_answer: Answer
+        user_answer: Answer = Body(...),
     ) -> dict:
         """Submit answer endpoint implementation."""
         self.submit_answer_use_case.execute(
