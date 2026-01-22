@@ -10,6 +10,7 @@ como entra aquí el tema de Comet:
 
 # TBD
 
+- Add traceability to use case, including threads
 - La barra de arriba sirve para algo?
 - Borrar preguntas IGUALES a mano
 - El icono de usuario sirve para algo?

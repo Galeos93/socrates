@@ -213,6 +213,13 @@ __marimo__/
 # docs folder
 docs/
 
+# playground folder
+playground/
+
+# Others
+project_assessment.md
+tracks.md
+
 
 ####################################
 # Node / Frontend (Vite, React, TS)

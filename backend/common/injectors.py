@@ -2,6 +2,8 @@
 import logging
 
 from openai import OpenAI
+from opik import track
+from opik.integrations.openai import track_openai
 from vyper import v
 
 # Domain services
@@ -66,7 +68,10 @@ def get_openai_client() -> OpenAI:
     global _openai_client
     if _openai_client is None:
         api_key = v.get_string("openai.api_key")
-        _openai_client = OpenAI(api_key=api_key)
+        if v.get_bool("opik.enable_tracking"):
+            _openai_client = track_openai(OpenAI(api_key=api_key))
+        else:
+            _openai_client = OpenAI(api_key=api_key)
         logging.info("[Injector] OpenAI client initialized")
     return _openai_client
 
@@ -102,30 +107,42 @@ def get_document_parser() -> LLMOCRDocumentParser:
     """Create document parser instance."""
     client = get_openai_client()
     model = v.get_string("openai.vision_model")
-    return LLMOCRDocumentParser(client=client, model=model)
+    doc_parser = LLMOCRDocumentParser(client=client, model=model)
+    if v.get_bool("opik.enable_tracking"):
+        doc_parser.parse = track(doc_parser.parse)
+    return doc_parser
 
 
 def get_knowledge_unit_generator() -> LLMKnowledgeUnitGenerationService:
     """Create knowledge unit generation service instance."""
     client = get_openai_client()
     model = v.get_string("openai.completion_model")
-    return LLMKnowledgeUnitGenerationService(client=client, model=model)
+    service = LLMKnowledgeUnitGenerationService(client=client, model=model)
+    if v.get_bool("opik.enable_tracking"):
+        service.generate_knowledge_units = track(service.generate_knowledge_units)
+    return service
 
 
 def get_question_generator() -> LLMQuestionGenerationService:
     """Create question generation service instance."""
     client = get_openai_client()
     model = v.get_string("openai.completion_model")
-    return LLMQuestionGenerationService(client=client, model=model)
+    service = LLMQuestionGenerationService(client=client, model=model)
+    if v.get_bool("opik.enable_tracking"):
+        service.generate_questions_batch = track(service.generate_questions_batch)
+        service.generate_next_question = track(service.generate_next_question)
+    return service
 
 
 def get_answer_evaluator() -> LLMAnswerEvaluationService:
     """Create answer evaluation service instance."""
-    return LLMAnswerEvaluationService(
+    service = LLMAnswerEvaluationService(
         client=get_openai_client(),
         model=v.get_string("openai.completion_model"),
     )
-
+    if v.get_bool("opik.enable_tracking"):
+        service.evaluate = track(service.evaluate)
+    return service
 
 def get_learning_scope_policy() -> NaiveLearningScopePolicy:
     """Create learning scope policy instance."""
