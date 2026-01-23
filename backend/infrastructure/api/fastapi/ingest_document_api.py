@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 
 from fastapi import UploadFile, File, HTTPException
+from opik import opik_context
 from pydantic import BaseModel
+from vyper import v
 
 from application.use_cases.document_ingestion import IngestDocumentUseCase
 
@@ -48,6 +50,15 @@ class IngestDocumentAPIBase:
                 file_bytes=file_bytes,
                 filename=filename
             )
+
+            if v.get_bool("opik.enable_tracking"):
+                opik_context.update_current_trace(
+                    tags=["document_ingestion"],
+                    metadata={
+                        "document_id": str(document_id),
+                        "filename": filename,
+                    },
+                )
 
             return IngestDocumentResponse(
                 document_id=str(document_id),

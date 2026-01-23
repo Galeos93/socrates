@@ -237,15 +237,25 @@ def get_update_mastery_use_case() -> UpdateKnowledgeUnitMasteryUseCase:
 # API implementations
 def get_ingest_document_api() -> IngestDocumentAPIBase:
     """Create ingest document API instance."""
-    return IngestDocumentAPIBase(ingest_document_use_case=get_ingest_document_use_case())
+    api = IngestDocumentAPIBase(ingest_document_use_case=get_ingest_document_use_case())
+
+    if v.get_bool("opik.enable_tracking"):
+        api.ingest_document = track(api.ingest_document)
+
+    return api
 
 
 def get_create_learning_plan_api() -> CreateLearningPlanAPIImpl:
     """Create learning plan API instance."""
-    return CreateLearningPlanAPIImpl(
+    api = CreateLearningPlanAPIImpl(
         create_learning_plan_use_case=get_create_learning_plan_use_case(),
         document_repository=get_document_repository(),
     )
+
+    if v.get_bool("opik.enable_tracking"):
+        api.create_learning_plan = track(api.create_learning_plan)
+
+    return api
 
 
 def get_learning_plan_api() -> GetLearningPlanAPIImpl:
@@ -257,9 +267,14 @@ def get_learning_plan_api() -> GetLearningPlanAPIImpl:
 
 def get_start_study_session_api() -> StartStudySessionAPIImpl:
     """Create start study session API instance."""
-    return StartStudySessionAPIImpl(
+    api = StartStudySessionAPIImpl(
         start_study_session_use_case=get_start_study_session_use_case()
     )
+
+    if v.get_bool("opik.enable_tracking"):
+        api.start_study_session = track(api.start_study_session)
+
+    return api
 
 
 def get_get_study_session_api() -> GetStudySessionAPIImpl:
@@ -276,7 +291,10 @@ def get_submit_answer_api() -> SubmitAnswerAPIImpl:
 
 def get_assess_question_api() -> AssessQuestionAPIImpl:
     """Create assess question API instance."""
-    return AssessQuestionAPIImpl(assess_question_use_case=get_assess_question_use_case())
+    api = AssessQuestionAPIImpl(assess_question_use_case=get_assess_question_use_case())
+    if v.get_bool("opik.enable_tracking"):
+        api.assess_question = track(api.assess_question)
+    return api
 
 
 def get_update_mastery_api() -> UpdateMasteryAPIImpl:

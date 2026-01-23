@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from opik import opik_context
+from vyper import v
+
 from application.use_cases.assess_question import AssessQuestionOutcomeUseCase
 from domain.entities.question import AnswerAssessment
 
@@ -36,6 +39,18 @@ class AssessQuestionAPIImpl(AssessQuestionAPIBase):
             study_session_id=session_id,
             question_id=question_id,
         )
+
+        if v.get_bool("opik.enable_tracking"):
+            opik_context.update_current_trace(
+                thread_id=learning_plan_id,
+                tags=["study_session_assessment"],
+                metadata={
+                    "learning_plan_id": learning_plan_id,
+                    "study_session_id": session_id,
+                    "question_id": question_id,
+                    "is_correct": answer_assessment.is_correct,
+                },
+            )
 
         return {
             "is_correct": answer_assessment.is_correct,

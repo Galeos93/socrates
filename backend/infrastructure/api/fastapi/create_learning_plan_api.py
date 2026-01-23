@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from opik import opik_context
+from vyper import v
+
 from application.dto.create_learning_plan import CreateLearningPlanRequest
 from application.use_cases.create_learning_plan import CreateLearningPlanFromDocumentUseCase
 from domain.ports.document_repository import DocumentRepository
@@ -33,7 +36,18 @@ class CreateLearningPlanAPIImpl(CreateLearningPlanAPIBase):
             raise ValueError("No valid documents found for the provided IDs")
 
         learning_plan: LearningPlan = self.create_learning_plan_use_case.execute(documents)
-        
+
+        if v.get_bool("opik.enable_tracking"):
+            opik_context.update_current_trace(
+                thread_id=learning_plan.id,
+                tags=["learning_plan_creation"],
+                metadata={
+                    "learning_plan_id": learning_plan.id,
+                    "document_ids": request.document_ids,
+                    "knowledge_unit_ids": [ku.id for ku in learning_plan.knowledge_units],
+                },
+            )
+
         return {
             "learning_plan_id": learning_plan.id,
             "knowledge_unit_count": len(learning_plan.knowledge_units),
