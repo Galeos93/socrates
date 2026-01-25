@@ -23,7 +23,8 @@ dependencies = [
   "vyper-config>=1.2.0,<2.0.0",
   "python-dotenv>=1.0.1,<2.0.0",
   "requests>=2.32.5,<3.0.0",
-  "opik>=1.9.93,<2.0.0"
+  "opik>=1.9.93,<2.0.0",
+  "werkzeug>=1.0.1",
 ]
 
 [project.urls]
@@ -43,10 +44,6 @@ black = "^24.1.0"
 isort = "^6.0.0"
 mypy = "^1.5.1"
 
-[build-system]
-requires = ["poetry-core>=1.6.0"]
-build-backend = "poetry.core.masonry.api"
-
 [tool.black]
 line-length = 88
 target-version = ["py311"]
@@ -56,6 +53,3 @@ profile = "black"
 
 [tool.mypy]
 strict = true
-
-[tool.vercel.scripts]
-build = "python main.py"

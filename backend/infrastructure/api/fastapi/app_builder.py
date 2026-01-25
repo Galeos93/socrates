@@ -46,6 +46,12 @@ class AppBuilder:
             self.get_study_session_api.get_study_session
         )
 
+    def register_health_routes(self, app: FastAPI) -> None:
+        """Register health check routes."""
+        @app.get("/health")
+        def health_check():
+            return {"status": "ok"}
+
     def register_answer_routes(self, app: FastAPI) -> None:
         """Register answer submission and assessment routes."""
         app.post("/learning-plans/{learning_plan_id}/sessions/{session_id}/answers/{question_id}")(
@@ -85,6 +91,8 @@ class AppBuilder:
 
         if self.update_mastery_api:
             self.register_mastery_routes(app)
+
+        self.register_health_routes(app)
 
         # Add CORS middleware (adjust for production)
         app.add_middleware(
