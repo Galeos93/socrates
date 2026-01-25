@@ -4,7 +4,7 @@ import uuid
 from pathlib import Path
 from typing import List
 
-from pdf2image import convert_from_bytes
+import pymupdf
 from PIL import Image
 
 from domain.entities.document import Document, DocumentID
@@ -87,7 +87,7 @@ class LLMOCRDocumentParser(DocumentParser):
 
     def _pdf_to_images(self, pdf_bytes: bytes) -> List[Image.Image]:
         """
-        Convert PDF bytes to a list of PIL images.
+        Convert PDF bytes to a list of PIL images using PyMuPDF.
 
         Parameters
         ----------
@@ -99,7 +99,22 @@ class LLMOCRDocumentParser(DocumentParser):
         List[Image.Image]
             List of PIL images, one per page.
         """
-        images = convert_from_bytes(pdf_bytes, dpi=200)
+        # Open PDF from bytes
+        doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
+
+        images = []
+        for page in doc:
+            # Convert page to image (pixmap)
+            # Using matrix for 200 DPI (zoom factor ~2.78)
+            mat = pymupdf.Matrix(200 / 72, 200 / 72)
+            pix = page.get_pixmap(matrix=mat)
+            
+            # Convert pixmap to PIL Image
+            img_data = pix.tobytes("png")
+            image = Image.open(io.BytesIO(img_data))
+            images.append(image)
+
+        doc.close()
         return images
 
     def _extract_text_from_image(self, image: Image.Image, page_num: int) -> str:
