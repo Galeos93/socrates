@@ -14,6 +14,7 @@ como entra aquí el tema de Comet:
 - Mejorar las evaluaciones actuales (mejor prompt, métricas mas granulares...)
 - Meter user feedback
 - Añadir source claims...
+- Handle errors if learningplan not found
 - La barra de arriba sirve para algo?
 - Borrar preguntas IGUALES a mano
 - El icono de usuario sirve para algo?

@@ -244,3 +244,5 @@ dist-ssr/
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
+.vercel
+.env*.local
