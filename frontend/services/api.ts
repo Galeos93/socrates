@@ -16,12 +16,8 @@ const apiHost = withRelatedProject({
    * Specify a default host that will be used for the backend if the related project
    * data cannot be parsed or is missing (e.g., in local development).
    */
-  defaultHost: process.env.VITE_API_HOST || 'http://localhost:8000',
+  defaultHost: process.env.BACKEND_HOST || 'http://localhost:8000',
 });
-
-console.log('[API] Backend URL:', apiHost);
-console.log('[API] Environment VITE_API_HOST:', process.env.VITE_API_HOST);
-console.log('[API] VERCEL_RELATED_PROJECTS:', process.env.VERCEL_RELATED_PROJECTS);
 
 const BASE_URL = apiHost;
 
