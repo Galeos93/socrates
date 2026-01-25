@@ -31,7 +31,7 @@ Homepage = "https://github.com/Galeos93/socrates"
 Repository = "https://github.com/Galeos93/socrates"
 
 [project.scripts]
-socrates-cli = "socrates.main:main"
+app = "main:app"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
