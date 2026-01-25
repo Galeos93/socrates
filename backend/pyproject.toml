@@ -55,4 +55,4 @@ profile = "black"
 strict = true
 
 [tool.vercel.scripts]
-build = "python build.py"
+build = "python main.py"
