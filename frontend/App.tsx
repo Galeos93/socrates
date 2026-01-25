@@ -86,7 +86,7 @@ const App: React.FC = () => {
       
       setStep(1);
     } catch (err) {
-      setError("Failed to process document. Ensure the backend is running at http://localhost:8000");
+      setError("Failed to process document. Ensure the backend is running");
     } finally {
       setLoading(false);
     }

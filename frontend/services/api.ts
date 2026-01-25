@@ -8,8 +8,18 @@ import {
   AssessmentResponse,
   MasteryUpdateResponse
 } from '../types';
+import { withRelatedProject } from '@vercel/related-projects';
 
-const BASE_URL = 'http://localhost:8000';
+const apiHost = withRelatedProject({
+  projectName: 'socrates-backend',
+  /**
+   * Specify a default host that will be used for the backend if the related project
+   * data cannot be parsed or is missing (e.g., in local development).
+   */
+  defaultHost: process.env.VITE_API_HOST || 'http://localhost:8000',
+});
+
+const BASE_URL = apiHost;
 
 /**
  * Note: These calls assume the backend is running locally.
