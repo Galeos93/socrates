@@ -10,7 +10,10 @@ como entra aquí el tema de Comet:
 
 # TBD
 
-- Add traceability to use case, including threads
+- DEPLOY ON VERCEL
+- Mejorar las evaluaciones actuales (mejor prompt, métricas mas granulares...)
+- Meter user feedback
+- Añadir source claims...
 - La barra de arriba sirve para algo?
 - Borrar preguntas IGUALES a mano
 - El icono de usuario sirve para algo?

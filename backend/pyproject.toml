@@ -1,39 +1,44 @@
-[tool.poetry]
+[project]
 name = "socrates"
 version = "0.1.0"
 description = "A study assistant using LLMs to generate knowledge units, questions, and learning routines."
-authors = ["Your Name <you@example.com>"]
-license = "MIT"
 readme = "README.md"
-homepage = "https://example.com/socrates"
-repository = "https://github.com/yourusername/socrates"
+license = { text = "MIT" }
+authors = [
+  { name = "Galeos93", email = "galeos93@users.noreply.github.com" }
+]
 keywords = ["llm", "learning", "study", "ai"]
+requires-python = ">=3.11,<4.0"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-openai = "^1.31.0"         # LLM API
-dataclasses-json = "^0.5.7" # optional: serialize dataclasses to/from JSON
-pydantic = "^2.5.0"         # optional: validation if needed
-pdf2image = "^1.16.3"       # PDF to image conversion
-Pillow = "^10.0.0"          # Image processing
-fastapi = "^0.109.0"        # Web framework
-python-multipart = "^0.0.6" # File upload support
-httpx = "^0.26.0"           # HTTP client (compatible with starlette)
-uvicorn = "^0.27.0"         # ASGI server
-vyper-config = "^1.2.0"            # Configuration management
-python-dotenv = "^1.2.1"
-requests = "^2.32.5"
-opik = "^1.9.93"
+dependencies = [
+  "openai>=1.31.0,<2.0.0",
+  "dataclasses-json>=0.5.7,<0.6.0",
+  "pydantic>=2.5.0,<3.0.0",
+  "pdf2image>=1.16.3,<2.0.0",
+  "Pillow>=10.0.0,<11.0.0",
+  "fastapi>=0.109.0,<1.0.0",
+  "python-multipart>=0.0.6,<1.0.0",
+  "httpx>=0.26.0,<1.0.0",
+  "uvicorn>=0.27.0,<1.0.0",
+  "vyper-config>=1.2.0,<2.0.0",
+  "python-dotenv>=1.0.1,<2.0.0",
+  "requests>=2.32.5,<3.0.0",
+  "opik>=1.9.93,<2.0.0"
+]
 
-[tool.poetry.dev-dependencies]
+[project.urls]
+Homepage = "https://github.com/Galeos93/socrates"
+Repository = "https://github.com/Galeos93/socrates"
+
+[project.scripts]
+socrates-cli = "socrates.main:main"
+
+[tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
 pytest-mock = "^3.12.0"
 black = "^24.1.0"
 isort = "^6.0.0"
 mypy = "^1.5.1"
-
-[tool.poetry.scripts]
-socrates-cli = "socrates.main:main"  # optional CLI entry point
 
 [build-system]
 requires = ["poetry-core>=1.6.0"]
@@ -48,3 +53,6 @@ profile = "black"
 
 [tool.mypy]
 strict = true
+
+[tool.vercel.scripts]
+build = "python build.py"

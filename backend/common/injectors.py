@@ -1,5 +1,6 @@
 """Dependency injection container for Socrates application."""
 import logging
+from functools import partial
 
 from openai import OpenAI
 from opik import track
@@ -57,7 +58,7 @@ from infrastructure.api.fastapi.update_mastery_api import UpdateMasteryAPIImpl
 
 
 # Singleton instances
-_openai_client = None
+_openai_client = None  # TODO: Maybe for the client we do not need singleton?
 _document_repository = None
 _learning_plan_repository = None
 _question_repository = None
@@ -119,7 +120,14 @@ def get_knowledge_unit_generator() -> LLMKnowledgeUnitGenerationService:
     model = v.get_string("openai.completion_model")
     service = LLMKnowledgeUnitGenerationService(client=client, model=model)
     if v.get_bool("opik.enable_tracking"):
-        service.generate_knowledge_units = track(service.generate_knowledge_units)
+        service.generate_knowledge_units = partial(
+            track(service.generate_knowledge_units),
+            opik_args={
+                "span": {
+                    "tags": ["knowledge_unit_generation"],
+                }
+            }
+        )
     return service
 
 
@@ -129,8 +137,24 @@ def get_question_generator() -> LLMQuestionGenerationService:
     model = v.get_string("openai.completion_model")
     service = LLMQuestionGenerationService(client=client, model=model)
     if v.get_bool("opik.enable_tracking"):
-        service.generate_questions_batch = track(service.generate_questions_batch)
-        service.generate_next_question = track(service.generate_next_question)
+        # service.generate_questions_batch = track(service.generate_questions_batch)
+        # service.generate_next_question = track(service.generate_next_question)
+        service.generate_questions_batch = partial(
+            track(service.generate_questions_batch),
+            opik_args={
+                "span": {
+                    "tags": ["question_generation_batch"],
+                }
+            }
+        )
+        service.generate_next_question = partial(
+            track(service.generate_next_question),
+            opik_args={
+                "span": {
+                    "tags": ["question_generation_next"],
+                }
+            }
+        )
     return service
 
 
@@ -141,7 +165,15 @@ def get_answer_evaluator() -> LLMAnswerEvaluationService:
         model=v.get_string("openai.completion_model"),
     )
     if v.get_bool("opik.enable_tracking"):
-        service.evaluate = track(service.evaluate)
+        # service.evaluate = track(service.evaluate)
+        service.evaluate = partial(
+            track(service.evaluate),
+            opik_args={
+                "span": {
+                    "tags": ["answer_evaluation"],
+                }
+            }
+        )
     return service
 
 def get_learning_scope_policy() -> NaiveLearningScopePolicy:
