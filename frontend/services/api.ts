@@ -19,7 +19,10 @@ const apiHost = withRelatedProject({
   defaultHost: process.env.BACKEND_HOST || 'http://localhost:8000',
 });
 
-const BASE_URL = apiHost;
+// Ensure the URL has a protocol - withRelatedProject returns just hostname in production
+const BASE_URL = apiHost.startsWith('http') ? apiHost : `https://${apiHost}`;
+
+console.log('[API] Final BASE_URL:', BASE_URL);
 
 /**
  * Note: These calls assume the backend is running locally.
