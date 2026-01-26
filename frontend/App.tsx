@@ -362,8 +362,14 @@ const App: React.FC = () => {
                           {assessment.is_correct ? "Correct!" : "Not quite right."}
                         </p>
                         <p className="text-slate-600 leading-relaxed">
-                          {assessment.feedback || (assessment.is_correct ? "You demonstrated clear understanding of the knowledge unit." : "Try revisiting the section about this concept.")}
+                          {assessment.explanation || assessment.feedback || (assessment.is_correct ? "You demonstrated clear understanding of the knowledge unit." : "Try revisiting the section about this concept.")}
                         </p>
+                        {!assessment.is_correct && assessment.correct_answer && (
+                          <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <p className="text-sm font-semibold text-slate-700 mb-1">Correct answer:</p>
+                            <p className="text-slate-900">{assessment.correct_answer}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <button 

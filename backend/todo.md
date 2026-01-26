@@ -10,9 +10,8 @@ como entra aquí el tema de Comet:
 
 # TBD
 
-- DEPLOY ON VERCEL
-- Mejorar las evaluaciones actuales (mejor prompt, métricas mas granulares...)
 - Meter user feedback
+- Dar explicación de por qué la respuesta es correcta o incorrecta
 - Añadir source claims...
 - Handle errors if learningplan not found
 - La barra de arriba sirve para algo?

@@ -1,0 +1,11 @@
+# docs folder
+docs/
+
+# playground folder
+playground/
+
+# Others
+project_assessment.md
+tracks.md
+backend/todo.md
+frontend/todo.md
