@@ -22,8 +22,6 @@ const apiHost = withRelatedProject({
 // Ensure the URL has a protocol - withRelatedProject returns just hostname in production
 const BASE_URL = apiHost.startsWith('http') ? apiHost : `https://${apiHost}`;
 
-console.log('[API] Final BASE_URL:', BASE_URL);
-
 /**
  * Note: These calls assume the backend is running locally.
  * In a real-world scenario, you might have environment-specific URLs.

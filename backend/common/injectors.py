@@ -32,7 +32,7 @@ from infrastructure.adapters.question_repository import InMemoryQuestionReposito
 
 # Infrastructure adapters - Policies
 from infrastructure.adapters.learning_scope_policy import NaiveLearningScopePolicy
-from infrastructure.adapters.study_focus_policy import IdentityStudyFocusPolicy
+from infrastructure.adapters.study_focus_policy import WeightedStudyFocusPolicy
 
 # Infrastructure adapters - Services
 from infrastructure.adapters.answer_evaluation import LLMAnswerEvaluationService
@@ -181,9 +181,9 @@ def get_learning_scope_policy() -> NaiveLearningScopePolicy:
     return NaiveLearningScopePolicy()
 
 
-def get_study_focus_policy() -> IdentityStudyFocusPolicy:
+def get_study_focus_policy() -> WeightedStudyFocusPolicy:
     """Create study focus policy instance."""
-    return IdentityStudyFocusPolicy()
+    return WeightedStudyFocusPolicy()
 
 
 def get_mastery_service() -> QuestionBasedMasteryService:
