@@ -9,6 +9,7 @@ from domain.entities.knowledge_unit import KnowledgeUnitID
 
 QuestionID = NewType("QuestionID", str)
 Answer = NewType("Answer", str)
+FeedbackID = NewType("FeedbackID", str)
 
 
 class QuestionStatus(str, Enum):
@@ -120,3 +121,34 @@ class SessionQuestion:
                 )
 
         return QuestionStatus.PENDING
+
+
+@dataclass(frozen=True)
+class AssessmentFeedback:
+    """
+    User feedback on a question assessment.
+    
+    Attributes
+    ----------
+    id : FeedbackID
+        Unique identifier for the feedback.
+    question_id : QuestionID
+        The question being evaluated.
+    learning_plan_id : str
+        The learning plan context.
+    session_id : str
+        The study session context.
+    score : int
+        User rating (e.g., 1-5 scale).
+    comment : str | None
+        Optional user comment about the assessment.
+    submitted_at : datetime
+        When the feedback was submitted.
+    """
+    id: FeedbackID
+    question_id: QuestionID
+    learning_plan_id: str
+    session_id: str
+    score: int
+    comment: str | None = None
+    submitted_at: datetime = field(default_factory=lambda: datetime.now(UTC))

@@ -22,6 +22,7 @@ from application.use_cases.get_study_session import GetStudySessionViewUseCase
 from application.use_cases.start_study_session import StartStudySessionUseCase
 from application.use_cases.submit_answer import SubmitAnswerUseCase
 from application.use_cases.update_ku_mastery import UpdateKnowledgeUnitMasteryUseCase
+from application.use_cases.submit_feedback import SubmitFeedbackUseCase
 
 # Infrastructure adapters - Repositories
 from infrastructure.adapters.document_repository import InMemoryDocumentRepository
@@ -37,6 +38,7 @@ from infrastructure.adapters.study_focus_policy import WeightedStudyFocusPolicy
 # Infrastructure adapters - Services
 from infrastructure.adapters.answer_evaluation import LLMAnswerEvaluationService
 from infrastructure.adapters.document_parser import LLMOCRDocumentParser
+from infrastructure.adapters.feedback_service import OpikFeedbackService
 from infrastructure.adapters.knowledge_unit_generation.llm.service import (
     LLMKnowledgeUnitGenerationService,
 )
@@ -55,6 +57,7 @@ from infrastructure.api.fastapi.ingest_document_api import IngestDocumentAPIBase
 from infrastructure.api.fastapi.start_study_session_api import StartStudySessionAPIImpl
 from infrastructure.api.fastapi.submit_answer_api import SubmitAnswerAPIImpl
 from infrastructure.api.fastapi.update_mastery_api import UpdateMasteryAPIImpl
+from infrastructure.api.fastapi.submit_feedback_api import SubmitFeedbackAPIImpl
 
 
 # Singleton instances
@@ -191,6 +194,22 @@ def get_mastery_service() -> QuestionBasedMasteryService:
     return QuestionBasedMasteryService()
 
 
+def get_feedback_service() -> OpikFeedbackService:
+    """Create feedback service instance."""
+    if v.get_bool("opik.enable_tracking"):
+        return OpikFeedbackService()
+    else:
+        # Return a no-op version if tracking is disabled
+        from domain.ports.feedback_service import FeedbackService
+        from domain.entities.question import AssessmentFeedback
+        
+        class NoOpFeedbackService(FeedbackService):
+            def submit_feedback(self, feedback: AssessmentFeedback) -> None:
+                logging.info(f"[NoOpFeedbackService] Feedback submission disabled: {feedback.id}")
+        
+        return NoOpFeedbackService()
+
+
 def get_study_session_view_service() -> StudySessionViewService:
     """Create study session view service instance."""
     question_repo = get_question_repository()
@@ -266,6 +285,13 @@ def get_update_mastery_use_case() -> UpdateKnowledgeUnitMasteryUseCase:
     )
 
 
+def get_submit_feedback_use_case() -> SubmitFeedbackUseCase:
+    """Create submit feedback use case instance."""
+    return SubmitFeedbackUseCase(
+        feedback_service=get_feedback_service(),
+    )
+
+
 # API implementations
 def get_ingest_document_api() -> IngestDocumentAPIBase:
     """Create ingest document API instance."""
@@ -332,3 +358,10 @@ def get_assess_question_api() -> AssessQuestionAPIImpl:
 def get_update_mastery_api() -> UpdateMasteryAPIImpl:
     """Create update mastery API instance."""
     return UpdateMasteryAPIImpl(update_mastery_use_case=get_update_mastery_use_case())
+
+
+def get_submit_feedback_api() -> SubmitFeedbackAPIImpl:
+    """Create submit feedback API instance."""
+    return SubmitFeedbackAPIImpl(
+        submit_feedback_use_case=get_submit_feedback_use_case()
+    )

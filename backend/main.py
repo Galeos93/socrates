@@ -97,6 +97,7 @@ def create_app():
         submit_answer_api=injectors.get_submit_answer_api(),
         assess_question_api=injectors.get_assess_question_api(),
         update_mastery_api=injectors.get_update_mastery_api(),
+        submit_feedback_api=injectors.get_submit_feedback_api(),
     )
 
     app = app_builder.create_app()

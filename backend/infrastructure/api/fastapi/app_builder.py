@@ -12,6 +12,7 @@ from infrastructure.api.fastapi.submit_answer_api import SubmitAnswerAPIBase
 from infrastructure.api.fastapi.assess_question_api import AssessQuestionAPIBase
 from infrastructure.api.fastapi.update_mastery_api import UpdateMasteryAPIBase
 from infrastructure.api.fastapi.ingest_document_api import IngestDocumentAPIBase
+from infrastructure.api.fastapi.submit_feedback_api import SubmitFeedbackAPIBase
 
 
 @dataclass
@@ -26,6 +27,7 @@ class AppBuilder:
     submit_answer_api: Optional[SubmitAnswerAPIBase] = None
     assess_question_api: Optional[AssessQuestionAPIBase] = None
     update_mastery_api: Optional[UpdateMasteryAPIBase] = None
+    submit_feedback_api: Optional[SubmitFeedbackAPIBase] = None
 
     def register_document_routes(self, app: FastAPI) -> None:
         """Register document ingestion routes."""
@@ -67,6 +69,12 @@ class AppBuilder:
             self.update_mastery_api.update_mastery
         )
 
+    def register_feedback_routes(self, app: FastAPI) -> None:
+        """Register feedback submission routes."""
+        app.post("/learning-plans/{learning_plan_id}/sessions/{session_id}/feedback/{question_id}")(
+            self.submit_feedback_api.submit_feedback
+        )
+
     def create_app(self) -> FastAPI:
         """Create and configure the FastAPI app with all registered use cases."""
         # Create the FastAPI instance
@@ -91,6 +99,9 @@ class AppBuilder:
 
         if self.update_mastery_api:
             self.register_mastery_routes(app)
+
+        if self.submit_feedback_api:
+            self.register_feedback_routes(app)
 
         self.register_health_routes(app)
 
