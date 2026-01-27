@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Home, BookOpen, Brain, CheckCircle, ChevronRight, Upload, Loader2, Sparkles, BookText, BarChart2 } from 'lucide-react';
+import { Home, BookOpen, Brain, CheckCircle, ChevronRight, Upload, Loader2, Sparkles, BookText, BarChart2, ThumbsUp, ThumbsDown, MessageSquare } from 'lucide-react';
 import { api } from './services/api';
 import { StudySessionView, Question, AssessmentResponse, LearningPlanDetails } from './types';
 import { geminiService } from './services/geminiService';
@@ -55,7 +55,7 @@ const App: React.FC = () => {
   const [step, setStep] = useState(0); // 0: Upload, 1: Plan Summary, 2: Study Session
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // App State
   const [documentId, setDocumentId] = useState<string | null>(null);
   const [learningPlanId, setLearningPlanId] = useState<string | null>(null);
@@ -66,6 +66,12 @@ const App: React.FC = () => {
   const [assessment, setAssessment] = useState<AssessmentResponse | null>(null);
   const [hint, setHint] = useState<string | null>(null);
 
+  // Feedback state
+  const [questionFeedbackGiven, setQuestionFeedbackGiven] = useState(false);
+  const [assessmentFeedbackGiven, setAssessmentFeedbackGiven] = useState(false);
+  const [showAssessmentComment, setShowAssessmentComment] = useState(false);
+  const [assessmentComment, setAssessmentComment] = useState('');
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -75,15 +81,15 @@ const App: React.FC = () => {
     try {
       const res = await api.ingestDocument(file);
       setDocumentId(res.document_id);
-      
+
       // Immediately create a learning plan for simplicity in this flow
       const planRes = await api.createLearningPlan([res.document_id]);
       setLearningPlanId(planRes.learning_plan_id);
-      
+
       // Fetch the full learning plan details with mastery
       const planDetails = await api.getLearningPlan(planRes.learning_plan_id);
       setLearningPlanDetails(planDetails);
-      
+
       setStep(1);
     } catch (err) {
       setError("Failed to process document. Ensure the backend is running");
@@ -114,7 +120,7 @@ const App: React.FC = () => {
   const submitAndAssess = async () => {
     if (!session || !learningPlanId) return;
     const q = session.questions[currentQuestionIdx];
-    
+
     setLoading(true);
     try {
       // 1. Submit answer with the user content in body
@@ -126,7 +132,7 @@ const App: React.FC = () => {
 
       // Update mastery in background
       await api.updateMastery(learningPlanId, q.knowledge_unit_id);
-      
+
       // Refresh learning plan details to get updated mastery
       const planDetails = await api.getLearningPlan(learningPlanId);
       setLearningPlanDetails(planDetails);
@@ -139,15 +145,19 @@ const App: React.FC = () => {
 
   const nextQuestion = () => {
     if (!session) return;
-    
+
     if (currentQuestionIdx < session.questions.length - 1) {
       setCurrentQuestionIdx(prev => prev + 1);
       setAnswer('');
       setAssessment(null);
       setHint(null);
+      setQuestionFeedbackGiven(false);
+      setAssessmentFeedbackGiven(false);
+      setShowAssessmentComment(false);
+      setAssessmentComment('');
     } else {
       // Completed session - go back to plan summary
-      setStep(1); 
+      setStep(1);
     }
   };
 
@@ -160,10 +170,41 @@ const App: React.FC = () => {
     setLoading(false);
   };
 
+  const handleQuestionFeedback = async (isHelpful: boolean) => {
+    if (!session || !learningPlanId || questionFeedbackGiven) return;
+    const q = session.questions[currentQuestionIdx];
+
+    try {
+      await api.submitQuestionFeedback(learningPlanId, session.id, q.id, isHelpful);
+      setQuestionFeedbackGiven(true);
+    } catch (err) {
+      console.error('Failed to submit question feedback:', err);
+    }
+  };
+
+  const handleAssessmentFeedback = async (agrees: boolean) => {
+    if (!session || !learningPlanId || !assessment || assessmentFeedbackGiven) return;
+
+    try {
+      await api.submitAssessmentFeedback(
+        learningPlanId,
+        session.id,
+        assessment.question_id,
+        agrees,
+        assessmentComment || undefined
+      );
+      setAssessmentFeedbackGiven(true);
+      setShowAssessmentComment(false);
+      setAssessmentComment('');
+    } catch (err) {
+      console.error('Failed to submit assessment feedback:', err);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-grow container mx-auto px-4 py-12 max-w-4xl">
         <StepIndicator currentStep={step} />
 
@@ -204,17 +245,17 @@ const App: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left mt-12">
-              <FeatureCard 
+              <FeatureCard
                 icon={<BookText className="text-indigo-500" />}
                 title="Claim Extraction"
                 desc="Socrates identifies atomic statements verifiable within your text."
               />
-              <FeatureCard 
+              <FeatureCard
                 icon={<Sparkles className="text-emerald-500" />}
                 title="Skill Application"
                 desc="Go beyond comprehension by testing your ability to apply knowledge."
               />
-              <FeatureCard 
+              <FeatureCard
                 icon={<BarChart2 className="text-amber-500" />}
                 title="Mastery Tracking"
                 desc="Track your progress with a dynamic model of your understanding."
@@ -249,8 +290,8 @@ const App: React.FC = () => {
                   {learningPlanDetails ? Math.round(learningPlanDetails.average_mastery * 100) : 0}%
                 </p>
                 <div className="w-full h-2 bg-slate-200 rounded-full mt-3">
-                  <div 
-                    className="h-full bg-indigo-600 rounded-full transition-all duration-500" 
+                  <div
+                    className="h-full bg-indigo-600 rounded-full transition-all duration-500"
                     style={{ width: `${learningPlanDetails ? learningPlanDetails.average_mastery * 100 : 0}%` }}
                   />
                 </div>
@@ -275,7 +316,7 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <button 
+            <button
               onClick={startSession}
               disabled={loading}
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center space-x-2 shadow-lg shadow-indigo-200"
@@ -296,8 +337,8 @@ const App: React.FC = () => {
             {/* Progress Bar */}
             <div className="flex items-center space-x-4">
               <div className="flex-grow bg-slate-200 h-2 rounded-full overflow-hidden">
-                <div 
-                  className="bg-indigo-600 h-full transition-all duration-500" 
+                <div
+                  className="bg-indigo-600 h-full transition-all duration-500"
                   style={{ width: `${(currentQuestionIdx / session.questions.length) * 100}%` }}
                 />
               </div>
@@ -322,27 +363,59 @@ const App: React.FC = () => {
                 <h3 className="text-2xl font-bold text-slate-900 leading-tight">
                   {session.questions[currentQuestionIdx].text}
                 </h3>
+
+                {/* Question Feedback */}
+                {!assessment && (
+                  <div className="flex items-center space-x-3 pt-3">
+                    <span className="text-sm text-slate-500">Is this question helpful?</span>
+                    <button
+                      onClick={() => handleQuestionFeedback(true)}
+                      disabled={questionFeedbackGiven}
+                      className={`p-2 rounded-lg transition-all ${
+                        questionFeedbackGiven
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'hover:bg-emerald-50 text-slate-400 hover:text-emerald-600'
+                      }`}
+                    >
+                      <ThumbsUp size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleQuestionFeedback(false)}
+                      disabled={questionFeedbackGiven}
+                      className={`p-2 rounded-lg transition-all ${
+                        questionFeedbackGiven
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'hover:bg-red-50 text-slate-400 hover:text-red-600'
+                      }`}
+                    >
+                      <ThumbsDown size={18} />
+                    </button>
+                    {questionFeedbackGiven && (
+                      <span className="text-xs text-emerald-600 font-medium">Thanks for your feedback!</span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
-                <textarea 
+                <textarea
                   className="w-full min-h-[160px] p-6 rounded-2xl border-2 border-slate-100 focus:border-indigo-400 focus:outline-none transition-colors text-lg"
                   placeholder="Type your answer here..."
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   disabled={!!assessment}
                 />
-                
+
                 {!assessment ? (
                   <div className="flex space-x-4">
-                    <button 
+                    <button
                       onClick={submitAndAssess}
                       disabled={loading || !answer.trim()}
                       className="flex-grow bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-2xl transition-all"
                     >
                       {loading ? <Loader2 className="animate-spin mx-auto" /> : "Check Answer"}
                     </button>
-                    <button 
+                    <button
                       onClick={getHint}
                       disabled={loading}
                       className="px-6 border-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold py-4 rounded-2xl transition-all flex items-center space-x-2"
@@ -372,11 +445,59 @@ const App: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    <button 
+
+                    {/* Assessment Feedback */}
+                    <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <MessageSquare size={16} className="text-slate-400" />
+                        <span className="text-sm font-medium text-slate-700">Do you agree with this assessment?</span>
+                      </div>
+
+                      {!assessmentFeedbackGiven ? (
+                        <div className="space-y-3">
+                          <div className="flex space-x-3">
+                            <button
+                              onClick={() => handleAssessmentFeedback(true)}
+                              className="flex-1 py-2 px-4 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg font-medium transition-all"
+                            >
+                              Yes, I agree
+                            </button>
+                            <button
+                              onClick={() => setShowAssessmentComment(true)}
+                              className="flex-1 py-2 px-4 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium transition-all"
+                            >
+                              No, I disagree
+                            </button>
+                          </div>
+
+                          {showAssessmentComment && (
+                            <div className="space-y-2 animate-in slide-in-from-top-2">
+                              <textarea
+                                value={assessmentComment}
+                                onChange={(e) => setAssessmentComment(e.target.value)}
+                                placeholder="Tell us why you disagree (optional)..."
+                                className="w-full p-3 rounded-lg border border-slate-300 focus:border-red-400 focus:outline-none text-sm"
+                                rows={3}
+                              />
+                              <button
+                                onClick={() => handleAssessmentFeedback(false)}
+                                className="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all"
+                              >
+                                Submit Feedback
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-emerald-600 font-medium">Thank you for your feedback!</p>
+                      )}
+                    </div>
+
+                    <button
                       onClick={nextQuestion}
-                      className={`mt-6 w-full py-4 rounded-2xl font-bold transition-all ${
-                        assessment.is_correct 
-                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100' 
+                      className={`mt-4 w-full py-4 rounded-2xl font-bold transition-all ${
+                        assessment.is_correct
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100'
                         : 'bg-slate-900 hover:bg-slate-800 text-white'
                       }`}
                     >

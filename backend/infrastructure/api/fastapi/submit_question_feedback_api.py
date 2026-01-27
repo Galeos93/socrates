@@ -1,10 +1,17 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from pydantic import BaseModel
+
 from application.use_cases.submit_question_feedback import SubmitQuestionFeedbackUseCase
 from application.dto.feedback import SubmitQuestionFeedbackDTO
 from domain.entities.question import QuestionID
 from domain.entities.learning import LearningPlanID, StudySessionID
+
+
+class QuestionFeedbackRequest(BaseModel):
+    """Request model for question feedback."""
+    is_helpful: bool
 
 
 class SubmitQuestionFeedbackAPIBase(ABC):
@@ -16,7 +23,7 @@ class SubmitQuestionFeedbackAPIBase(ABC):
         learning_plan_id: str,
         session_id: str,
         question_id: str,
-        is_helpful: bool,
+        request: QuestionFeedbackRequest,
     ) -> dict:
         """Submit user feedback for a question's quality."""
         pass
@@ -33,16 +40,16 @@ class SubmitQuestionFeedbackAPIImpl(SubmitQuestionFeedbackAPIBase):
         learning_plan_id: str,
         session_id: str,
         question_id: str,
-        is_helpful: bool,
+        request: QuestionFeedbackRequest,
     ) -> dict:
         """Submit question feedback endpoint implementation."""
         dto = SubmitQuestionFeedbackDTO(
             question_id=QuestionID(question_id),
             learning_plan_id=LearningPlanID(learning_plan_id),
             session_id=StudySessionID(session_id),
-            is_helpful=is_helpful,
+            is_helpful=request.is_helpful,
         )
-        
+
         feedback = self.submit_question_feedback_use_case.execute(
             question_feedback_dto=dto
         )

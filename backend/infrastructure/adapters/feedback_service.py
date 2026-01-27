@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 
 from opik import Opik
+from vyper import v
 
 from domain.ports.feedback_service import AssessmentFeedbackService, QuestionFeedbackService
 from domain.entities.question import AssessmentFeedback, QuestionFeedback
@@ -41,7 +42,7 @@ class OpikAssessmentFeedbackService(AssessmentFeedbackService):
         try:
             # Search for traces matching the assessment context
             traces = self.opik_client.search_traces(
-                project_name=None,  # Use default project
+                project_name=v.get_string("opik.project_name"),  # Use configured project
                 filter_string=(
                     f'metadata.learning_plan_id = "{feedback.learning_plan_id}" '
                     f'AND metadata.study_session_id = "{feedback.session_id}" '
@@ -120,7 +121,7 @@ class OpikQuestionFeedbackService(QuestionFeedbackService):
         try:
             # Search for traces matching the question generation context
             traces = self.opik_client.search_traces(
-                project_name=None,  # Use default project
+                project_name=v.get_string("opik.project_name"),  # Use configured project
                 filter_string=(
                     f'metadata.learning_plan_id = "{feedback.learning_plan_id}" '
                     f'AND metadata.study_session_id = "{feedback.session_id}" '

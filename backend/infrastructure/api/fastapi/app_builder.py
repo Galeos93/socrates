@@ -19,7 +19,7 @@ from infrastructure.api.fastapi.submit_question_feedback_api import SubmitQuesti
 @dataclass
 class AppBuilder:
     """FastAPI application builder for Socrates study assistant."""
-    
+
     ingest_document_api: Optional[IngestDocumentAPIBase] = None
     create_learning_plan_api: Optional[CreateLearningPlanAPIBase] = None
     get_learning_plan_api: Optional[GetLearningPlanAPIBase] = None
@@ -73,7 +73,7 @@ class AppBuilder:
 
     def register_feedback_routes(self, app: FastAPI) -> None:
         if self.submit_assessment_feedback_api:
-            app.post("/learning-plans/{learning_plan_id}/sessions/{session_id}/assessments/{assessment_id}/feedback")(
+            app.post("/learning-plans/{learning_plan_id}/sessions/{session_id}/questions/{question_id}/assessments/feedback")(
                 self.submit_assessment_feedback_api.submit_assessment_feedback
             )
         if self.submit_question_feedback_api:

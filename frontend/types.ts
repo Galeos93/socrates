@@ -64,3 +64,17 @@ export interface MasteryUpdateResponse {
   knowledge_unit_id: KnowledgeUnitID;
   mastery_level: number;
 }
+
+export interface AssessmentFeedbackResponse {
+  feedback_id: string;
+  question_id: QuestionID;
+  score: number;
+  message: string;
+}
+
+export interface QuestionFeedbackResponse {
+  feedback_id: string;
+  question_id: QuestionID;
+  is_helpful: boolean;
+  message: string;
+}
