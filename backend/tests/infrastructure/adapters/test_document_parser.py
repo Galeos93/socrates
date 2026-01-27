@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from unittest.mock import Mock, MagicMock
 
+from openai import OpenAI
 from PIL import Image
 import pytest
 
@@ -98,15 +99,27 @@ class TestLLMOCRDocumentParser:
     @staticmethod
     def test_parse_creates_document_with_metadata(parser, mock_openai_client, monkeypatch):
         """Test that parse creates a Document with proper metadata."""
-        # Mock pdf2image to avoid needing actual PDF
-        def mock_convert_from_bytes(pdf_bytes, dpi):
-            # Return a single test image
-            return [Image.new('RGB', (100, 100), color='green')]
+        # Mock PyMuPDF to avoid needing actual PDF
+        mock_doc = Mock()
+        mock_page = Mock()
+        mock_pixmap = Mock()
         
-        monkeypatch.setattr(
-            'infrastructure.adapters.document_parser.convert_from_bytes',
-            mock_convert_from_bytes
-        )
+        # Mock pixmap.tobytes to return fake PNG data
+        fake_png = Image.new('RGB', (100, 100), color='green')
+        img_buffer = io.BytesIO()
+        fake_png.save(img_buffer, format='PNG')
+        img_buffer.seek(0)
+        mock_pixmap.tobytes.return_value = img_buffer.getvalue()
+        
+        # Mock page.get_pixmap to return the pixmap
+        mock_page.get_pixmap.return_value = mock_pixmap
+        
+        # Mock document to iterate over one page
+        mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
+        mock_doc.close = Mock()
+        
+        # Mock pymupdf.open to return the mock document
+        monkeypatch.setattr('pymupdf.open', Mock(return_value=mock_doc))
         
         # Parse a "PDF"
         document = parser.parse(b"fake pdf bytes", "test_document.pdf")
@@ -131,13 +144,10 @@ class TestLLMOCRDocumentParserIntegration:
     )
     def test_parse_real_pdf(real_pdf_path):
         """Test parsing a real PDF with OpenAI API."""
-        from openai import OpenAI
-        
         # This would require:
         # 1. A real OpenAI API key
         # 2. A real PDF file
-        # 3. poppler-utils installed for pdf2image
-        
+
         client = OpenAI()
         parser = LLMOCRDocumentParser(client=client)
         
