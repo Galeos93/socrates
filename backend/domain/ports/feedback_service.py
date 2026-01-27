@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 
-from domain.entities.question import AssessmentFeedback
+from domain.entities.question import AssessmentFeedback, QuestionFeedback
 
 
-class FeedbackService(ABC):
+class AssessmentFeedbackService(ABC):
     """
-    Port for feedback services that track user feedback on assessments.
+    Port for assessment feedback services that track user feedback on assessments.
     
     Different implementations might:
     - Store feedback in a database
@@ -21,6 +21,29 @@ class FeedbackService(ABC):
         Parameters
         ----------
         feedback : AssessmentFeedback
-            The feedback to submit.
+            The assessment feedback to submit.
+        """
+        pass
+
+
+class QuestionFeedbackService(ABC):
+    """
+    Port for question feedback services that track user feedback on question quality.
+    
+    Different implementations might:
+    - Store feedback in a database
+    - Send feedback to an observability platform (e.g., Opik)
+    - Combine multiple tracking mechanisms
+    """
+
+    @abstractmethod
+    def submit_feedback(self, feedback: QuestionFeedback) -> None:
+        """
+        Submit user feedback for question quality.
+        
+        Parameters
+        ----------
+        feedback : QuestionFeedback
+            The question feedback to submit.
         """
         pass

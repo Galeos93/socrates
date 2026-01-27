@@ -1,22 +1,22 @@
-"""Integration test for feedback submission flow."""
+"""Integration test for assessment feedback submission flow."""
 import pytest
 from unittest.mock import Mock
 from domain.entities.question import AssessmentFeedback, QuestionID, FeedbackID
 from domain.entities.learning import LearningPlanID, StudySessionID
-from application.use_cases.submit_feedback import SubmitFeedbackUseCase
-from application.dto.assessmentfeedback import SubmitAssessmentFeedbackDTO, AssessmentID
-from domain.ports.feedback_service import FeedbackService
+from application.use_cases.submit_assessment_feedback import SubmitAssessmentFeedbackUseCase
+from application.dto.feedback import SubmitAssessmentFeedbackDTO, AssessmentID
+from domain.ports.feedback_service import AssessmentFeedbackService
 
 
-class TestSubmitFeedbackUseCase:
-    """Test cases for SubmitFeedbackUseCase."""
+class TestSubmitAssessmentFeedbackUseCase:
+    """Test cases for SubmitAssessmentFeedbackUseCase."""
 
     @staticmethod
     def test_execute_creates_feedback_with_valid_score():
         """Test that feedback is created with valid score."""
         # Arrange
-        mock_feedback_service = Mock(spec=FeedbackService)
-        use_case = SubmitFeedbackUseCase(feedback_service=mock_feedback_service)
+        mock_feedback_service = Mock(spec=AssessmentFeedbackService)
+        use_case = SubmitAssessmentFeedbackUseCase(feedback_service=mock_feedback_service)
         
         learning_plan_id = LearningPlanID("lp-123")
         session_id = StudySessionID("session-456")
@@ -50,8 +50,8 @@ class TestSubmitFeedbackUseCase:
     def test_execute_disagrees_maps_to_low_score():
         """Test that agrees=False maps to score 1."""
         # Arrange
-        mock_feedback_service = Mock(spec=FeedbackService)
-        use_case = SubmitFeedbackUseCase(feedback_service=mock_feedback_service)
+        mock_feedback_service = Mock(spec=AssessmentFeedbackService)
+        use_case = SubmitAssessmentFeedbackUseCase(feedback_service=mock_feedback_service)
         
         dto = SubmitAssessmentFeedbackDTO(
             assessment_id=AssessmentID("assessment-001"),
@@ -72,8 +72,8 @@ class TestSubmitFeedbackUseCase:
     def test_execute_allows_optional_comment():
         """Test that comment is optional."""
         # Arrange
-        mock_feedback_service = Mock(spec=FeedbackService)
-        use_case = SubmitFeedbackUseCase(feedback_service=mock_feedback_service)
+        mock_feedback_service = Mock(spec=AssessmentFeedbackService)
+        use_case = SubmitAssessmentFeedbackUseCase(feedback_service=mock_feedback_service)
         
         dto = SubmitAssessmentFeedbackDTO(
             assessment_id=AssessmentID("assessment-001"),

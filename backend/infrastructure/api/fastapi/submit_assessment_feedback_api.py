@@ -1,17 +1,17 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from application.use_cases.submit_feedback import SubmitFeedbackUseCase
-from application.dto.assessmentfeedback import SubmitAssessmentFeedbackDTO, AssessmentID
+from application.use_cases.submit_assessment_feedback import SubmitAssessmentFeedbackUseCase
+from application.dto.feedback import SubmitAssessmentFeedbackDTO, AssessmentID
 from domain.entities.question import QuestionID
 from domain.entities.learning import LearningPlanID, StudySessionID
 
 
-class SubmitFeedbackAPIBase(ABC):
-    """Abstract base class for submit feedback endpoints."""
+class SubmitAssessmentFeedbackAPIBase(ABC):
+    """Abstract base class for submit assessment feedback endpoints."""
 
     @abstractmethod
-    async def submit_feedback(
+    async def submit_assessment_feedback(
         self,
         learning_plan_id: str,
         session_id: str,
@@ -25,12 +25,12 @@ class SubmitFeedbackAPIBase(ABC):
 
 
 @dataclass
-class SubmitFeedbackAPIImpl(SubmitFeedbackAPIBase):
-    """Implementation of the SubmitFeedbackAPIBase."""
+class SubmitAssessmentFeedbackAPIImpl(SubmitAssessmentFeedbackAPIBase):
+    """Implementation of the SubmitAssessmentFeedbackAPIBase."""
 
-    submit_feedback_use_case: SubmitFeedbackUseCase
+    submit_assessment_feedback_use_case: SubmitAssessmentFeedbackUseCase
 
-    async def submit_feedback(
+    async def submit_assessment_feedback(
         self,
         learning_plan_id: str,
         session_id: str,
@@ -49,7 +49,7 @@ class SubmitFeedbackAPIImpl(SubmitFeedbackAPIBase):
             comment=comment,
         )
         
-        feedback = self.submit_feedback_use_case.execute(
+        feedback = self.submit_assessment_feedback_use_case.execute(
             assessment_feedback_dto=dto
         )
 
@@ -57,5 +57,5 @@ class SubmitFeedbackAPIImpl(SubmitFeedbackAPIBase):
             "feedback_id": feedback.id,
             "question_id": feedback.question_id,
             "score": feedback.score,
-            "message": "Feedback submitted successfully",
+            "message": "Assessment feedback submitted successfully",
         }

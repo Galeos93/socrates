@@ -2,14 +2,14 @@ from dataclasses import dataclass
 import logging
 from uuid import uuid4
 
-from application.dto.assessmentfeedback import SubmitAssessmentFeedbackDTO
-from domain.ports.feedback_service import FeedbackService
+from application.dto.feedback import SubmitAssessmentFeedbackDTO
+from domain.ports.feedback_service import AssessmentFeedbackService
 from domain.entities.question import AssessmentFeedback, QuestionID, FeedbackID
 from domain.entities.learning import LearningPlanID, StudySessionID
 
 
 @dataclass
-class SubmitFeedbackUseCase:
+class SubmitAssessmentFeedbackUseCase:
     """
     Use case for submitting user feedback on question assessments.
     
@@ -17,7 +17,7 @@ class SubmitFeedbackUseCase:
     which can be used to improve the question generation and evaluation process.
     """
 
-    feedback_service: FeedbackService
+    feedback_service: AssessmentFeedbackService
 
     def execute(
         self,
@@ -44,7 +44,7 @@ class SubmitFeedbackUseCase:
         comment: str | None = assessment_feedback_dto.comment
 
         logging.info(
-            f"[SubmitFeedbackUseCase] Submitting feedback for question {question_id} "
+            f"[SubmitAssessmentFeedbackUseCase] Submitting feedback for question {question_id} "
             f"in session {session_id}, learning plan {learning_plan_id}"
         )
 
@@ -62,7 +62,7 @@ class SubmitFeedbackUseCase:
         self.feedback_service.submit_feedback(feedback)
 
         logging.info(
-            f"[SubmitFeedbackUseCase] Feedback submitted successfully: {feedback.id}"
+            f"[SubmitAssessmentFeedbackUseCase] Feedback submitted successfully: {feedback.id}"
         )
 
         return feedback

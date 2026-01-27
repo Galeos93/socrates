@@ -152,3 +152,18 @@ class AssessmentFeedback:
     score: int
     comment: str | None = None
     submitted_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+
+@dataclass(frozen=True)
+class QuestionFeedback:
+    """User feedback on the quality of a question."""
+
+    id: FeedbackID
+
+    question_id: QuestionID
+    session_id: str
+    learning_plan_id: str
+
+    is_helpful: bool
+
+    submitted_at: datetime = field(default_factory=lambda: datetime.now(UTC))
