@@ -12,7 +12,7 @@ from domain.entities.learning import LearningPlanID, StudySessionID
 class SubmitQuestionFeedbackUseCase:
     """
     Use case for submitting user feedback on question quality.
-    
+
     This allows users to rate the quality and helpfulness of questions,
     which can be used to improve the question generation process.
     """

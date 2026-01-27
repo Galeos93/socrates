@@ -41,10 +41,10 @@ class TestLLMOCRDocumentParser:
     def test_parse_rejects_non_pdf(parser):
         """Test that parser rejects non-PDF files."""
         file_bytes = b"fake content"
-        
+
         with pytest.raises(ValueError) as exc_info:
             parser.parse(file_bytes, "document.txt")
-        
+
         assert "Unsupported file format" in str(exc_info.value)
         assert "Only PDF files are supported" in str(exc_info.value)
 
@@ -52,10 +52,10 @@ class TestLLMOCRDocumentParser:
     def test_parse_rejects_docx(parser):
         """Test that parser rejects DOCX files."""
         file_bytes = b"fake content"
-        
+
         with pytest.raises(ValueError) as exc_info:
             parser.parse(file_bytes, "document.docx")
-        
+
         assert ".docx" in str(exc_info.value)
 
     @staticmethod
@@ -63,10 +63,10 @@ class TestLLMOCRDocumentParser:
         """Test image to base64 conversion."""
         # Create a simple test image
         img = Image.new('RGB', (100, 100), color='red')
-        
+
         # Convert to base64
         base64_str = parser._image_to_base64(img)
-        
+
         # Verify it's a non-empty string
         assert isinstance(base64_str, str)
         assert len(base64_str) > 0
@@ -76,23 +76,23 @@ class TestLLMOCRDocumentParser:
         """Test that text extraction calls OpenAI API correctly."""
         # Create a test image
         img = Image.new('RGB', (100, 100), color='blue')
-        
+
         # Extract text
         text = parser._extract_text_from_image(img, page_num=1)
-        
+
         # Verify OpenAI was called
         assert mock_openai_client.chat.completions.create.called
         call_args = mock_openai_client.chat.completions.create.call_args
-        
+
         # Check model
         assert call_args.kwargs['model'] == 'gpt-4o'
-        
+
         # Check messages structure
         messages = call_args.kwargs['messages']
         assert len(messages) == 1
         assert messages[0]['role'] == 'user'
         assert len(messages[0]['content']) == 2  # text + image
-        
+
         # Verify extracted text
         assert text == "Extracted text from page"
 
@@ -103,27 +103,27 @@ class TestLLMOCRDocumentParser:
         mock_doc = Mock()
         mock_page = Mock()
         mock_pixmap = Mock()
-        
+
         # Mock pixmap.tobytes to return fake PNG data
         fake_png = Image.new('RGB', (100, 100), color='green')
         img_buffer = io.BytesIO()
         fake_png.save(img_buffer, format='PNG')
         img_buffer.seek(0)
         mock_pixmap.tobytes.return_value = img_buffer.getvalue()
-        
+
         # Mock page.get_pixmap to return the pixmap
         mock_page.get_pixmap.return_value = mock_pixmap
-        
+
         # Mock document to iterate over one page
         mock_doc.__iter__ = Mock(return_value=iter([mock_page]))
         mock_doc.close = Mock()
-        
+
         # Mock pymupdf.open to return the mock document
         monkeypatch.setattr('pymupdf.open', Mock(return_value=mock_doc))
-        
+
         # Parse a "PDF"
         document = parser.parse(b"fake pdf bytes", "test_document.pdf")
-        
+
         # Verify Document structure
         assert isinstance(document, Document)
         assert document.text == "Extracted text from page"
@@ -150,14 +150,14 @@ class TestLLMOCRDocumentParserIntegration:
 
         client = OpenAI()
         parser = LLMOCRDocumentParser(client=client)
-        
+
         # Load a real PDF
         with open(real_pdf_path, "rb") as f:
             pdf_bytes = f.read()
-        
+
         # Parse it
         document = parser.parse(pdf_bytes, real_pdf_path.name)
-        
+
         # Verify we got text
         assert len(document.text) > 0
         assert document.metadata['num_pages'] > 0
