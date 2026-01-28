@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+
+from domain.entities.learning import KnowledgeUnit
 
 
 class StudyFocusPolicy(ABC):
@@ -8,7 +9,7 @@ class StudyFocusPolicy(ABC):
     """
 
     @abstractmethod
-    def select_knowledge_units(self, knowledge_units: list, max_units: int) -> list:
+    def select_knowledge_units(self, knowledge_units: list[KnowledgeUnit], max_units: int) -> list[KnowledgeUnit]:
         """
         Selects a subset of knowledge units to focus on.
 

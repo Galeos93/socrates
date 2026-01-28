@@ -10,7 +10,6 @@ como entra aquí el tema de Comet:
 
 # TBD
 
-- Meter user feedback [ongoing]
 - Meter experimentación de prompts
 - Handle errors if learningplan not found
 - Añadir source claims...
@@ -25,6 +24,61 @@ como entra aquí el tema de Comet:
 - Comprobar que la dificultad verdaderamente se ajusta con el mastery
 
 # Plan
+
+## Day 1 (28 January)
+
+Experimentation with opik -> Focus on KU Generation
+
+## Day 2 (29 January)
+
+Be able to modify prompts in KU Generation?? Also fix the prompt since it does not contain system message. https://www.comet.com/docs/opik/prompt_engineering/prompt_management
+Handle learning plan errors
+Add source claims to knowledge units (no estoy seguro de que aporte valor, pero sería bueno tenerlo para redondear el modelo)
+
+## Day 3 (30 January)
+
+Arreglar hint de Socrates
+Borrar cosas de la UI que no aportan nada
+Mejorar performance de parseo PDF (quizas imagen es muy pesada? puedo tambier usar asincronimso)
+
+## Day 4 (31 January)
+
+Checkear que la dificultad se ajusta al mastery
+Revisar calidad de knowledge units
+Intentar crear una dashboard de learning plan para poder continuar con el estudio
+
+## Day 5 (1 February)
+
+Intentar crear una dashboard de learning plan para poder continuar con el estudio
+
+## Day 6 (2 February)
+
+Intentar crear una dashboard de learning plan para poder continuar con el estudio
+
+## Day 7 (3 February)
+
+README and documentation creation.
+
+## Day 8 (4 February)
+
+Demo video recording.
+
+## Day 9 (5 February)
+
+Slide deck creation.
+
+## Day 10 (6 February)
+
+Final review and polish.
+
+## Day 11 (7 February)
+
+Visual polish: dashboards, screenshots, metric names.
+
+## Day 12 (8 February)
+
+SUBMIT THE SOLUTION!
+
 
 Phase 1 — Lock the Narrative (Days 1–2)
 
@@ -131,3 +185,30 @@ Video
 Slides
 
 Close with: “Evaluation is a first-class feature.”
+
+
+Add this?
+
+🥇 1. Learning Plan Dashboard (HIGH impact, LOW complexity)
+
+Why it matters
+
+Makes your system feel like a product, not a demo
+
+Judges instantly understand value
+
+Minimum viable version
+
+List learning plans
+
+Show:
+
+% mastery overall
+
+Last study session
+
+“Continue learning” button
+
+Key message to judges
+
+“You always resume exactly where you left off.”

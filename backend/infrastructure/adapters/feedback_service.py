@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 from typing import Optional
 
@@ -46,7 +46,8 @@ class OpikAssessmentFeedbackService(AssessmentFeedbackService):
                 filter_string=(
                     f'metadata.learning_plan_id = "{feedback.learning_plan_id}" '
                     f'AND metadata.study_session_id = "{feedback.session_id}" '
-                    f'AND metadata.question_id = "{feedback.question_id}"'
+                    f'AND metadata.question_id = "{feedback.question_id}" '
+                    f'AND tags contains "study_session_assessment"'
                 ),
             )
 
@@ -94,11 +95,15 @@ class OpikQuestionFeedbackService(QuestionFeedbackService):
     Question feedback service that annotates Opik traces with user feedback.
 
     This implementation:
-    1. Searches for the question generation trace using metadata filters
-    2. Annotates the trace with user feedback
+    1. Accumulates feedback per session (since one trace generates all questions)
+    2. Updates the session trace with the mean feedback score
+    3. Clears old session data when a new session is detected
     """
 
     opik_client: Optional[Opik] = None
+
+    # In-memory storage: {session_id: {question_id: is_helpful}}
+    _session_feedback: dict[str, dict[str, bool]] = field(default_factory=dict)
 
     def __post_init__(self):
         """Initialize Opik client if not provided."""
@@ -109,23 +114,51 @@ class OpikQuestionFeedbackService(QuestionFeedbackService):
         """
         Submit question feedback by annotating the corresponding Opik trace.
 
+        Accumulates feedback per session and updates the trace with mean score.
+
         Parameters
         ----------
         feedback : QuestionFeedback
             The question feedback to submit.
         """
+        session_id = feedback.session_id
+        question_id = str(feedback.question_id)
+
+        # Clear old sessions (keep only the last 10 sessions to prevent memory leak)
+        if len(self._session_feedback) > 10:
+            oldest_session = next(iter(self._session_feedback))
+            logging.info(
+                f"[OpikQuestionFeedbackService] Clearing old session {oldest_session} from memory"
+            )
+            del self._session_feedback[oldest_session]
+
+        # Initialize session if not exists
+        if session_id not in self._session_feedback:
+            logging.info(
+                f"[OpikQuestionFeedbackService] Starting feedback tracking for session {session_id}"
+            )
+            self._session_feedback[session_id] = {}
+
+        # Store feedback for this question
+        self._session_feedback[session_id][question_id] = feedback.is_helpful
+
+        # Calculate mean feedback for the session
+        feedbacks = list(self._session_feedback[session_id].values())
+        helpful_count = sum(1 for f in feedbacks if f)
+        mean_score = helpful_count / len(feedbacks) if feedbacks else 0.0
+
         logging.info(
-            f"[OpikQuestionFeedbackService] Searching for question generation trace for question {feedback.question_id}"
+            f"[OpikQuestionFeedbackService] Session {session_id}: {helpful_count}/{len(feedbacks)} questions rated helpful (mean={mean_score:.2f})"
         )
 
         try:
-            # Search for traces matching the question generation context
+            # Search for the session trace (one trace per session, not per question)
             traces = self.opik_client.search_traces(
-                project_name=v.get_string("opik.project_name"),  # Use configured project
+                project_name=v.get_string("opik.project_name"),
                 filter_string=(
                     f'metadata.learning_plan_id = "{feedback.learning_plan_id}" '
-                    f'AND metadata.study_session_id = "{feedback.session_id}" '
-                    f'AND metadata.question_id = "{feedback.question_id}"'
+                    f'AND metadata.study_session_id = "{session_id}" '
+                    f'AND tags contains "study_session_retrieval"'
                 ),
             )
 
@@ -133,30 +166,30 @@ class OpikQuestionFeedbackService(QuestionFeedbackService):
             trace_list = list(traces)
             if not trace_list:
                 logging.warning(
-                    f"[OpikQuestionFeedbackService] No trace found for question {feedback.question_id}"
+                    f"[OpikQuestionFeedbackService] No trace found for session {session_id}"
                 )
                 return
 
             target_trace = trace_list[0]
             logging.info(
-                f"[OpikQuestionFeedbackService] Found trace {target_trace.id}, annotating with question feedback"
+                f"[OpikQuestionFeedbackService] Found session trace {target_trace.id}, updating with mean feedback"
             )
 
-            # Log feedback score using Opik API
+            # Log mean feedback score for the session
             self.opik_client.log_traces_feedback_scores(
                 scores=[
                     {
                         "id": target_trace.id,
-                        "name": "question_feedback",
-                        "value": 1 if feedback.is_helpful else 0,
-                        "reason": "User found question helpful" if feedback.is_helpful else "User did not find question helpful",
+                        "name": "questions_quality",
+                        "value": mean_score,
+                        "reason": f"{helpful_count} out of {len(feedbacks)} questions rated helpful",
                     }
                 ]
             )
 
             logging.info(
-                f"[OpikQuestionFeedbackService] Successfully logged feedback for trace {target_trace.id} "
-                f"with is_helpful={feedback.is_helpful}"
+                f"[OpikQuestionFeedbackService] Successfully updated trace {target_trace.id} "
+                f"with mean score {mean_score:.2f}"
             )
 
         except Exception as e:

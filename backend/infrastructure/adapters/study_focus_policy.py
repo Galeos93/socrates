@@ -60,8 +60,8 @@ class WeightedStudyFocusPolicy(StudyFocusPolicy):
             Selected subset of knowledge units.
         """
         def score(ku: KnowledgeUnit) -> float:
-            # Higher importance and lower mastery yield higher scores
-            return ku.importance * (1.0 - ku.mastery_level)
+            # Lower mastery yield higher scores
+            return 1.0 - ku.mastery_level
 
         return sorted(knowledge_units, key=score, reverse=True)[:max_units]
 

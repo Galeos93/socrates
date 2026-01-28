@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import logging
 from typing import Callable
 import uuid
 import json
@@ -64,7 +65,7 @@ class LLMQuestionGenerationService(QuestionGenerationService):
 
         return question
 
-    def generate_questions_batch(self, ku: KnowledgeUnit, count: int) -> list[Question]:
+    def generate_questions_batch(self, ku: KnowledgeUnit, max_count: int) -> list[Question]:
         """
         Generate multiple diverse questions for a KnowledgeUnit using an LLM.
 
@@ -72,15 +73,15 @@ class LLMQuestionGenerationService(QuestionGenerationService):
         ----------
         ku : KnowledgeUnit
             The fact or skill to generate questions for.
-        count : int
-            Number of questions to generate.
+        max_count : int
+            Max number of questions to generate.
 
         Returns
         -------
         list[Question]
         """
         # --- 1. Build batch prompt ---
-        prompt = build_batch_question_creation_prompt(ku, count)
+        prompt = build_batch_question_creation_prompt(ku, max_count)
 
         # --- 2. Call the LLM ---
         raw_output = self.llm_call(prompt)
@@ -91,11 +92,17 @@ class LLMQuestionGenerationService(QuestionGenerationService):
             questions_data = data["questions"]
         except (json.JSONDecodeError, KeyError):
             # fallback: use single question generation
-            return [self.generate_next_question(ku) for _ in range(count)]
+            # Log the error
+            logging.error(
+                "[LLMQuestionGenerationService] Failed to parse batch question generation output. "
+                "Falling back to single question generation.",
+                exc_info=True
+            )
+            return [self.generate_next_question(ku) for _ in range(max_count)]
 
         # --- 4. Construct Questions ---
         questions = []
-        for q_data in questions_data[:count]:  # Ensure we don't exceed requested count
+        for q_data in questions_data[:max_count]:  # Ensure we don't exceed requested count
             try:
                 question = Question(
                     id=str(uuid.uuid4()),
@@ -108,9 +115,5 @@ class LLMQuestionGenerationService(QuestionGenerationService):
             except KeyError:
                 # Skip malformed questions
                 continue
-
-        # If we didn't get enough valid questions, fill with single generations
-        while len(questions) < count:
-            questions.append(self.generate_next_question(ku))
 
         return questions

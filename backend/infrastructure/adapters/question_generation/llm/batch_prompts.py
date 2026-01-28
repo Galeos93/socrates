@@ -3,12 +3,12 @@ from domain.entities.knowledge_unit import FactKnowledge, SkillKnowledge, Knowle
 
 def _get_mastery_guidance(mastery_level: float) -> str:
     """Generate guidance for question difficulty based on mastery level.
-    
+
     Parameters
     ----------
     mastery_level: float
         Current mastery level (0.0 to 1.0)
-        
+
     Returns
     -------
     str
@@ -36,82 +36,126 @@ def _get_mastery_guidance(mastery_level: float) -> str:
 
 
 def build_batch_question_creation_prompt(ku: KnowledgeUnit, count: int) -> str:
-    """Builds a prompt for generating multiple diverse questions from a KnowledgeUnit.
-
-    Parameters
-    ----------
-    ku: KnowledgeUnit
-        The fact or skill to generate questions for.
-    count: int
-        Number of questions to generate.
-
-    Returns
-    -------
-    str
-        The constructed prompt.
     """
+    Builds a prompt for generating up to `count` non-redundant questions
+    from a KnowledgeUnit. The model is explicitly instructed to generate
+    fewer questions when additional ones would be redundant.
+    """
+
     if isinstance(ku, FactKnowledge):
         source_texts = ku.target_claim.text
         mastery_guidance = _get_mastery_guidance(ku.mastery_level)
-        prompt = f"""
-        Generate {count} DIVERSE questions to test comprehension of the following fact:
 
-        Fact: {ku.description}
-        Source Claim: {source_texts}
-        Current Mastery Level: {ku.mastery_level:.2f} (0.0 = beginner, 1.0 = expert)
+        prompt = f"""
+        You are generating assessment questions for a learner.
+
+        Your task is to generate UP TO {count} questions to test understanding of the following fact.
+        {count} is a MAXIMUM, not a requirement.
+
+        Fact Description:
+        {ku.description}
+
+        Source Claim (for your reference only):
+        {source_texts}
+
+        Current Mastery Level:
+        {ku.mastery_level:.2f} (0.0 = beginner, 1.0 = expert)
 
         {mastery_guidance}
 
-        IMPORTANT: 
-        - Create {count} DIFFERENT questions that test the same knowledge from various angles
-        - Each question must be unique and test a different aspect or formulation
-        - Questions must be self-contained and answerable WITHOUT seeing the source claim or document
-        - Do NOT use phrases like "according to the source claim", "based on the text", "in the document", etc.
-        - The learner will ONLY see the question, not the source material
+        QUESTION GENERATION RULES (STRICT):
 
-        Output JSON format only, DO NOT enclose it with ```json``` or any other markdown:
+        - Generate ONLY as many questions as can be meaningfully distinct.
+        - If the fact is simple and supports only a small number of unique questions, generate fewer questions.
+        - Do NOT force the question count.
+        - STOP generating questions once all distinct ways of testing this fact have been exhausted.
+
+        DIVERSITY REQUIREMENT:
+
+        - Each question must test a genuinely different aspect, perspective, or formulation of the fact.
+        - Differences in wording alone do NOT count as diversity.
+        - Do NOT produce paraphrases that test the same understanding in the same way.
+
+        CONTENT RULES:
+
+        - Each question must be self-contained and answerable WITHOUT access to the source claim.
+        - Do NOT reference the source claim, document, or text in any way.
+        - The learner will ONLY see the question.
+
+        OUTPUT FORMAT (JSON ONLY):
+
+        Return a JSON object with the following structure.
+        Do not enclose it with ````json` markdown.
+        The "questions" array MUST contain ≤ {count} items.
+
         {{
             "questions": [
                 {{
                     "question_text": "string",
                     "answer": "string",
                     "difficulty_level": 1-5
-                }},
-                ...
+                }}
             ]
         }}
         """
+
     elif isinstance(ku, SkillKnowledge):
         claims_texts = " ; ".join(c.text for c in ku.source_claims)
         mastery_guidance = _get_mastery_guidance(ku.mastery_level)
-        prompt = f"""
-        Generate {count} DIVERSE applied questions to test the following skill:
 
-        Skill: {ku.description}
-        Source Claims: {claims_texts}
-        Current Mastery Level: {ku.mastery_level:.2f} (0.0 = beginner, 1.0 = expert)
+        prompt = f"""
+        You are generating assessment questions for a learner.
+
+        Your task is to generate UP TO {count} applied questions to test the following skill.
+        {count} is a MAXIMUM, not a requirement.
+
+        Skill Description:
+        {ku.description}
+
+        Source Claims (for your reference only):
+        {claims_texts}
+
+        Current Mastery Level:
+        {ku.mastery_level:.2f} (0.0 = beginner, 1.0 = expert)
 
         {mastery_guidance}
 
-        IMPORTANT:
-        - Create {count} DIFFERENT questions that test the same skill with various scenarios
-        - Each question must present a unique scenario or application context
-        - Questions must be self-contained and answerable WITHOUT seeing the source claims or document
-        - Do NOT use phrases like "according to the source", "based on the text", "in the document", etc.
-        - The learner will ONLY see the question, not the source material
+        QUESTION GENERATION RULES (STRICT):
 
-        Output JSON format only, DO NOT enclose it with ```json``` or any other markdown:
+        - Generate ONLY as many questions as can be meaningfully distinct.
+        - If the skill supports only a limited number of realistic or unique scenarios, generate fewer questions.
+        - Do NOT force the question count.
+        - STOP generating questions once all distinct application scenarios have been covered.
+
+        DIVERSITY REQUIREMENT:
+
+        - Each question must present a genuinely different application context.
+        - Superficial changes that do not alter the skill being tested do NOT count as diversity.
+        - Do NOT create multiple questions that test the same procedural step in the same way.
+
+        CONTENT RULES:
+
+        - Each question must be self-contained and answerable WITHOUT access to the source claims.
+        - Do NOT reference the source claims, document, or text in any way.
+        - The learner will ONLY see the question.
+
+        OUTPUT FORMAT (JSON ONLY):
+
+        Return a JSON object with the following structure.
+        Do not enclose it with ````json` markdown.
+        The "questions" array MUST contain ≤ {count} items.
+
         {{
             "questions": [
                 {{
                     "question_text": "string",
                     "answer": "string",
                     "difficulty_level": 1-5
-                }},
-                ...
+                }}
             ]
         }}
         """
+
     else:
         raise ValueError(f"Unknown KnowledgeUnit type: {type(ku)}")
 
