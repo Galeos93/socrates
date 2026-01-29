@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Callable, List, Dict
+from typing import List, Dict, Callable
 import json
 import uuid
 
@@ -7,16 +7,36 @@ from domain.entities.document import Document
 from domain.entities.claim import Claim
 from domain.entities.knowledge_unit import KnowledgeUnit, FactKnowledge, SkillKnowledge
 from domain.ports.knowledge_unit_generation import KnowledgeUnitGenerationService
+from application.ports.prompt_template_repository import PromptTemplateRepository
 from infrastructure.adapters.knowledge_unit_generation.llm.prompts import (
     build_knowledge_unit_extraction_prompt
 )
 from infrastructure.adapters.knowledge_unit_generation.llm.openai_client import create_openai_llm_call
 
 
+class DefaultFactory:
+    @staticmethod
+    def build(template: str, template_arguments: Dict) -> str:
+        return build_knowledge_unit_extraction_prompt(template_arguments["document_text"])
+
+
+class DefaultTemplateRepo(PromptTemplateRepository):
+    @staticmethod
+    def get(name: str, version: str) -> str:
+        return ""
+
+    @staticmethod
+    def save(name: str, content: str, version: str) -> None:
+        pass
+
+
 @dataclass
 class LLMKnowledgeUnitGenerationService(KnowledgeUnitGenerationService):
     client: object
     model: str = "gpt-4o"
+    # prompot factory receives a dictionary with arguments to format the template
+    prompt_factory: DefaultFactory = DefaultFactory()
+    template_repo: DefaultTemplateRepo = DefaultTemplateRepo()
 
     def __post_init__(self):
         """Initialize llm_call with the client."""
@@ -40,7 +60,16 @@ class LLMKnowledgeUnitGenerationService(KnowledgeUnitGenerationService):
             )
 
         doc = documents[0]
-        prompt = build_knowledge_unit_extraction_prompt(doc.text)
+        template = self.template_repo.get(
+            name="KnowledgeUnitGenerationPrompt",
+            version=None,
+        )
+        prompt = self.prompt_factory.build(
+            template=template,
+            template_arguments={
+                "document_text": doc.text,
+            }
+        )
         raw_response = self.llm_call(prompt)
         data = json.loads(raw_response)
 

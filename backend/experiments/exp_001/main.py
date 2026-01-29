@@ -1,21 +1,24 @@
 from dataclasses import asdict
 import json
-from pydoc import doc
 from typing import List, Dict
-import uuid
 
-from opik import Opik
+from opik import Opik, Prompt
 import opik
 from openai import OpenAI
 
 from experiments.exp_001.dataset import DOCUMENTS_DATASET
+from experiments.exp_001.templates import TEMPLATE_V1
+from experiments.exp_001.prompt_factory import OpikPromptFactory
 from experiments.common.metrics.knowledge_unit_gen_rule import KnowledgeUnitGenerationRule
 from domain.entities.learning import KnowledgeUnit
 from domain.entities.document import Document
+from application.ports.prompt_template_repository import PromptTemplateRepository
 from infrastructure.adapters.knowledge_unit_generation.llm.service import LLMKnowledgeUnitGenerationService
 
 EXPERIMENT_NAME = "exp_001_knowledge_unit_generation_evaluation"
-DATASET_NAME = "KU_GEN_TEXT_ANALYSIS"
+DATASET_NAME = "KU_GEN_TEXT_ANALYS IS"
+OPIK_TEMPLATE_NAME = "KnowledgeUnitGenerationPrompt"
+
 
 # Configure Opik
 opik.configure()
@@ -26,9 +29,17 @@ client = Opik()
 # OpenAI client
 openai_client =OpenAI()
 
+class TemplateRepo(PromptTemplateRepository):
+    @staticmethod
+    def get(name: str, version: str) -> str:
+        return TEMPLATE_V1
+
+
 ku_generation_service = LLMKnowledgeUnitGenerationService(
     client=openai_client,
     model="gpt-4o",
+    prompt_factory=OpikPromptFactory(opik_template_name=OPIK_TEMPLATE_NAME),
+    template_repo= TemplateRepo()
 )
 
 dataset = client.get_or_create_dataset(name=DATASET_NAME)
@@ -38,6 +49,16 @@ cleaned_documents = [
     for doc in DOCUMENTS_DATASET
 ]
 dataset.insert(cleaned_documents)
+
+# Load template from Opik
+opik_template: Prompt = client.get_prompt(name=OPIK_TEMPLATE_NAME)
+
+# Create experiment
+experiment = client.create_experiment(
+    dataset_name=DATASET_NAME,
+    name=EXPERIMENT_NAME,
+    prompt=opik_template,
+)
 
 knowledge_units_per_doc: Dict[str, List[KnowledgeUnit]] = {
     dataset_item["id"]: ku_generation_service.generate_knowledge_units([
@@ -77,7 +98,8 @@ for dataset_item in dataset.get_items():
 
 # Log experiment results using the bulk method
 client.rest_client.experiments.experiment_items_bulk(
-    experiment_name=EXPERIMENT_NAME,
+    experiment_name=experiment.name,
+    experiment_id=experiment.id,
     dataset_name=DATASET_NAME,
     items=[
         {
