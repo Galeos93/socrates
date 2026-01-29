@@ -3,6 +3,13 @@ import pytest
 import uuid
 from unittest.mock import Mock
 
+from application.common.exceptions import (
+    LearningPlanNotFoundException,
+    StudySessionNotFoundException,
+    QuestionNotFoundException,
+    QuestionNotInStudySessionException,
+    NoUnassessedAnswerAttemptException,
+)
 from application.use_cases.assess_question import AssessQuestionOutcomeUseCase
 from domain.entities.learning import LearningPlan, StudySession
 from domain.entities.question import (
@@ -176,7 +183,7 @@ class TestAssessQuestionOutcomeUseCase:
         question_repository: InMemoryQuestionRepository,
         learning_plan_repository: InMemoryLearningPlanRepository,
     ) -> None:
-        """Should raise ValueError when learning plan is not found."""
+        """Should raise LearningPlanNotFoundException when learning plan is not found."""
         # Arrange
         mock_evaluator = Mock(spec=AnswerEvaluationService)
 
@@ -187,7 +194,7 @@ class TestAssessQuestionOutcomeUseCase:
         )
 
         # Act & Assert
-        with pytest.raises(ValueError, match="LearningPlan not found"):
+        with pytest.raises(LearningPlanNotFoundException):
             use_case.execute(
                 learning_plan_id="non-existent-id",
                 study_session_id="session-id",
@@ -200,7 +207,7 @@ class TestAssessQuestionOutcomeUseCase:
         learning_plan_repository: InMemoryLearningPlanRepository,
         question_repository: InMemoryQuestionRepository,
     ) -> None:
-        """Should raise ValueError when study session is not found."""
+        """Should raise StudySessionNotFoundException when study session is not found."""
         # Arrange
         learning_plan_repository.save(sample_learning_plan)
 
@@ -213,7 +220,7 @@ class TestAssessQuestionOutcomeUseCase:
         )
 
         # Act & Assert
-        with pytest.raises(ValueError, match="StudySession not found"):
+        with pytest.raises(StudySessionNotFoundException):
             use_case.execute(
                 learning_plan_id=sample_learning_plan.id,
                 study_session_id="non-existent-session-id",
@@ -227,7 +234,7 @@ class TestAssessQuestionOutcomeUseCase:
         learning_plan_repository: InMemoryLearningPlanRepository,
         question_repository: InMemoryQuestionRepository,
     ) -> None:
-        """Should raise ValueError when question is not part of the session."""
+        """Should raise QuestionNotInStudySessionException when question is not part of the session."""
         # Arrange
         learning_plan_repository.save(sample_learning_plan)
 
@@ -240,7 +247,7 @@ class TestAssessQuestionOutcomeUseCase:
         )
 
         # Act & Assert
-        with pytest.raises(ValueError, match="Question not part of this StudySession"):
+        with pytest.raises(QuestionNotInStudySessionException):
             use_case.execute(
                 learning_plan_id=sample_learning_plan.id,
                 study_session_id=sample_study_session.id,
@@ -254,7 +261,7 @@ class TestAssessQuestionOutcomeUseCase:
         learning_plan_repository: InMemoryLearningPlanRepository,
         question_repository: InMemoryQuestionRepository,
     ) -> None:
-        """Should raise ValueError when canonical question is not found."""
+        """Should raise QuestionNotFoundException when canonical question is not found."""
         # Arrange
         question_id = QuestionID(str(uuid.uuid4()))
         sample_study_session.questions[question_id] = SessionQuestion(
@@ -276,7 +283,7 @@ class TestAssessQuestionOutcomeUseCase:
         )
 
         # Act & Assert
-        with pytest.raises(ValueError, match="Question not found"):
+        with pytest.raises(QuestionNotFoundException, match=f"Question with ID '{question_id}' not found"):
             use_case.execute(
                 learning_plan_id=sample_learning_plan.id,
                 study_session_id=sample_study_session.id,

@@ -5,6 +5,10 @@ from datetime import datetime, UTC
 
 from domain.entities.knowledge_unit import KnowledgeUnit, KnowledgeUnitID
 from domain.entities.question import QuestionID, SessionQuestion
+from domain.common.exceptions import (
+    LearningPlanIsAlreadyCompletedException,
+    StudySessionFullException,
+)
 
 
 StudySessionID = NewType("StudySessionID", str)
@@ -29,7 +33,7 @@ class StudySession:
 
     def register_question(self, question_id: QuestionID) -> None:
         if not self.can_ask_more_questions():
-            raise ValueError("StudySession cannot accept more questions")
+            raise StudySessionFullException(self.id)
 
         if question_id in self.questions:
             return  # idempotent
@@ -55,7 +59,7 @@ class LearningPlan:
 
     def start_session(self, max_questions: int) -> StudySession:
         if self.is_completed():
-            raise ValueError("LearningPlan is already completed")
+            raise LearningPlanIsAlreadyCompletedException(self.id)
 
         session = StudySession(
             id=str(uuid.uuid4()),

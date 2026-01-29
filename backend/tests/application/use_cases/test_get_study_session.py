@@ -3,6 +3,10 @@ import pytest
 import uuid
 from unittest.mock import Mock
 
+from application.common.exceptions import (
+    LearningPlanNotFoundException,
+    StudySessionNotFoundException,
+)
 from application.use_cases.get_study_session import GetStudySessionViewUseCase
 from application.dto.study_session_view import StudySessionView
 from application.services.study_session_view import StudySessionViewService
@@ -94,7 +98,7 @@ class TestGetStudySessionViewUseCase:
     def test_raises_error_when_learning_plan_not_found(
         learning_plan_repository: InMemoryLearningPlanRepository,
     ) -> None:
-        """Should raise ValueError when learning plan is not found."""
+        """Should raise LearningPlanNotFoundException when learning plan is not found."""
         # Arrange
         mock_view_service = Mock(spec=StudySessionViewService)
 
@@ -104,7 +108,7 @@ class TestGetStudySessionViewUseCase:
         )
 
         # Act & Assert
-        with pytest.raises(ValueError, match="LearningPlan not found"):
+        with pytest.raises(LearningPlanNotFoundException):
             use_case.execute(
                 learning_plan_id="non-existent-id",
                 study_session_id="session-id",
@@ -115,7 +119,7 @@ class TestGetStudySessionViewUseCase:
         sample_learning_plan: LearningPlan,
         learning_plan_repository: InMemoryLearningPlanRepository,
     ) -> None:
-        """Should raise ValueError when study session is not found in the plan."""
+        """Should raise StudySessionNotFoundException when study session is not found in the plan."""
         # Arrange
         learning_plan_repository.save(sample_learning_plan)
 
@@ -128,8 +132,8 @@ class TestGetStudySessionViewUseCase:
 
         # Act & Assert
         # Note: This test assumes get_session method exists on LearningPlan
-        # The use case should raise ValueError when session is not found
-        with pytest.raises((ValueError, AttributeError)):
+        # The use case should raise StudySessionNotFoundException when session is not found
+        with pytest.raises((StudySessionNotFoundException, AttributeError)):
             use_case.execute(
                 learning_plan_id=sample_learning_plan.id,
                 study_session_id="non-existent-session-id",

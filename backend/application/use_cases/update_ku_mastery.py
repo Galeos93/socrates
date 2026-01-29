@@ -7,6 +7,10 @@ from domain.services.mastery import MasteryService
 from domain.entities.learning import SessionQuestion
 from domain.entities.knowledge_unit import KnowledgeUnit
 from domain.entities.question import QuestionStatus
+from application.common.exceptions import (
+    LearningPlanNotFoundException,
+    KUNotInLearningPlanException,
+)
 
 
 @dataclass
@@ -28,7 +32,7 @@ class UpdateKnowledgeUnitMasteryUseCase:
         # 1. Load aggregate root
         plan = self.learning_plan_repository.get_by_id(learning_plan_id)
         if not plan:
-            raise ValueError("LearningPlan not found")
+            raise LearningPlanNotFoundException(learning_plan_id=learning_plan_id)
 
         # 2. Find KnowledgeUnit
         ku = next(
@@ -36,7 +40,10 @@ class UpdateKnowledgeUnitMasteryUseCase:
             None
         )
         if not ku:
-            raise ValueError("KnowledgeUnit not part of LearningPlan")
+            raise KUNotInLearningPlanException(
+                knowledge_unit_id=knowledge_unit_id,
+                learning_plan_id=learning_plan_id
+            )
 
         # 3. Collect session questions for this KU
         session_questions: list[SessionQuestion] = []

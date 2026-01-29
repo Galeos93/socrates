@@ -11,6 +11,9 @@ from domain.entities.knowledge_unit import KnowledgeUnit
 from domain.ports.learning_scope_policy import LearningScopePolicy
 from domain.ports.knowledge_unit_generation import KnowledgeUnitGenerationService
 from domain.ports.learning_plan_repository import LearningPlanRepository
+from application.common.exceptions import (
+    KUNotGeneratedException,
+)
 
 
 @dataclass
@@ -41,7 +44,7 @@ class CreateLearningPlanFromDocumentUseCase:
         )
 
         if not knowledge_units:
-            raise ValueError("No knowledge units could be generated from document")
+            raise KUNotGeneratedException("No knowledge units could be generated from document")
 
         # 3. Create the LearningPlan aggregate
         learning_plan = LearningPlan(

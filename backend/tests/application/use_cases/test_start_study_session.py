@@ -3,6 +3,9 @@ import pytest
 from unittest.mock import Mock
 import uuid
 
+from application.common.exceptions import (
+    LearningPlanNotFoundException,
+)
 from application.use_cases.start_study_session import StartStudySessionUseCase
 from domain.entities.learning import LearningPlan, StudySession
 from domain.entities.knowledge_unit import KnowledgeUnit
@@ -211,7 +214,7 @@ class TestStartStudySessionUseCase:
         learning_plan_repository: InMemoryLearningPlanRepository,
         question_repository: InMemoryQuestionRepository,
     ) -> None:
-        """Should raise ValueError when learning plan is not found."""
+        """Should raise LearningPlanNotFoundException when learning plan is not found."""
         # Arrange
         mock_policy = Mock(spec=StudyFocusPolicy)
         mock_question_gen = Mock(spec=QuestionGenerationService)
@@ -225,5 +228,5 @@ class TestStartStudySessionUseCase:
         )
 
         # Act & Assert
-        with pytest.raises(ValueError):  # Will fail trying to access None
+        with pytest.raises(LearningPlanNotFoundException):  # Will fail trying to access None
             use_case.execute("non-existent-plan-id")

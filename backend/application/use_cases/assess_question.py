@@ -8,6 +8,13 @@ from domain.entities.question import (
     QuestionID, AnswerAssessment, SessionQuestion, AnswerAttempt
 )
 from domain.entities.learning import StudySessionID
+from application.common.exceptions import (
+    LearningPlanNotFoundException,
+    StudySessionNotFoundException,
+    QuestionNotFoundException,
+    QuestionNotInStudySessionException,
+    NoUnassessedAnswerAttemptException,
+)
 
 
 
@@ -33,7 +40,7 @@ class AssessQuestionOutcomeUseCase:
         # 1. Load aggregate root
         learning_plan = self.learning_plan_repository.get_by_id(learning_plan_id)
         if not learning_plan:
-            raise ValueError("LearningPlan not found")
+            raise LearningPlanNotFoundException(learning_plan_id=learning_plan_id)
 
         # 2. Locate study session
         session = next(
@@ -41,22 +48,25 @@ class AssessQuestionOutcomeUseCase:
             None
         )
         if not session:
-            raise ValueError("StudySession not found")
+            raise StudySessionNotFoundException(study_session_id=study_session_id)
 
         # 3. Locate session question
         session_question: SessionQuestion = session.questions.get(question_id)
         if not session_question:
-            raise ValueError("Question not part of this StudySession")
+            raise QuestionNotInStudySessionException(
+                question_id=question_id,
+                study_session_id=study_session_id
+            )
 
         # 4. Get latest unanswered attempt
         attempt: AnswerAttempt = session_question.latest_unassessed_attempt()
         if not attempt:
-            raise ValueError("No unassessed answer attempt found")
+            raise NoUnassessedAnswerAttemptException(question_id=question_id)
 
         # 5. Load canonical question
         question = self.question_repository.get_by_id(question_id)
         if not question:
-            raise ValueError("Question not found")
+            raise QuestionNotFoundException(question_id=question_id)
 
         # 6. Evaluate
         assessment = self.answer_evaluation_service.evaluate(

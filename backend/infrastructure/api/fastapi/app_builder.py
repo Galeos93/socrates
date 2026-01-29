@@ -2,8 +2,15 @@ from dataclasses import dataclass
 from typing import Optional
 
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+
+from application.common.exceptions import (
+    LearningPlanNotFoundException,
+    StudySessionNotFoundException,
+    QuestionNotInStudySessionException,
+)
 from infrastructure.api.fastapi.create_learning_plan_api import CreateLearningPlanAPIBase
 from infrastructure.api.fastapi.get_learning_plan_api import GetLearningPlanAPIBase
 from infrastructure.api.fastapi.start_study_session_api import StartStudySessionAPIBase
@@ -81,6 +88,24 @@ class AppBuilder:
                 self.submit_question_feedback_api.submit_question_feedback
         )
 
+    def learning_plan_exception_handler(self, request, exc: LearningPlanNotFoundException):
+        return JSONResponse(
+            status_code=404,
+            content={"detail": str(exc)},
+        )
+
+    def study_session_exception_handler(self, request, exc: StudySessionNotFoundException):
+        return JSONResponse(
+            status_code=404,
+            content={"detail": str(exc)},
+        )
+
+    def question_not_in_study_session_exception_handler(self, request, exc: QuestionNotInStudySessionException):
+        return JSONResponse(
+            status_code=404,
+            content={"detail": str(exc)},
+        )
+
     def create_app(self) -> FastAPI:
         """Create and configure the FastAPI app with all registered use cases."""
         # Create the FastAPI instance
@@ -88,6 +113,21 @@ class AppBuilder:
             title="Socrates Study Assistant",
             version="1.0.0",
             description="AI-powered study assistant using LLMs to generate knowledge units and questions",
+        )
+
+        app.add_exception_handler(
+            LearningPlanNotFoundException,
+            self.learning_plan_exception_handler,
+        )
+
+        app.add_exception_handler(
+            StudySessionNotFoundException,
+            self.study_session_exception_handler,
+        )
+
+        app.add_exception_handler(
+            QuestionNotInStudySessionException,
+            self.question_not_in_study_session_exception_handler,
         )
 
         # Register routes based on available APIs

@@ -3,6 +3,9 @@ import logging
 
 from domain.ports.learning_plan_repository import LearningPlanRepository
 from domain.entities.learning import LearningPlan
+from application.common.exceptions import (
+    LearningPlanNotFoundException,
+)
 
 
 @dataclass
@@ -15,9 +18,9 @@ class GetLearningPlanUseCase:
 
     def execute(self, learning_plan_id: str) -> LearningPlan:
         logging.info("[GetLearningPlanUseCase] Retrieving learning plan.")
-        
+
         plan = self.learning_plan_repository.get_by_id(learning_plan_id)
         if not plan:
-            raise ValueError("LearningPlan not found")
-        
+            raise LearningPlanNotFoundException(learning_plan_id=learning_plan_id)
+
         return plan

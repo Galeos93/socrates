@@ -10,6 +10,10 @@ from domain.ports.question_generation import QuestionGenerationService
 from domain.ports.study_focus_policy import StudyFocusPolicy
 from domain.ports.learning_plan_repository import LearningPlanRepository
 from domain.ports.question_repository import QuestionRepository
+from application.common.exceptions import (
+    LearningPlanNotFoundException,
+    KUNotSelectedException,
+)
 
 
 @dataclass
@@ -38,7 +42,7 @@ class StartStudySessionUseCase:
             self.learning_plan_repository.get_by_id(learning_plan_id)
         )
         if not learning_plan:
-            raise ValueError("LearningPlan not found")
+            raise LearningPlanNotFoundException(learning_plan_id=learning_plan_id)
 
         # 2. Select focus knowledge units
         knowledge_units = self.study_focus_policy.select_knowledge_units(
@@ -47,15 +51,17 @@ class StartStudySessionUseCase:
         )
 
         if not knowledge_units:
-            raise ValueError("No knowledge units selected for study session")
+            raise KUNotSelectedException(
+                "No knowledge units selected for study session"
+            )
 
         # 3. Generate questions using batch generation to avoid repetition
         questions: list[Question] = []
-        
+
         # Calculate how many questions per KU
         questions_per_ku = self.max_questions // len(knowledge_units)
         remaining_questions = self.max_questions % len(knowledge_units)
-        
+
         # Generate batch of questions for each KU
         for i, ku in enumerate(knowledge_units):
             # Distribute remaining questions to first KUs

@@ -4,6 +4,11 @@ import logging
 from domain.ports.learning_plan_repository import LearningPlanRepository
 from domain.entities.question import Answer, QuestionID
 from domain.entities.learning import StudySessionID
+from application.common.exceptions import (
+    LearningPlanNotFoundException,
+    StudySessionNotFoundException,
+    QuestionNotInStudySessionException,
+)
 
 
 @dataclass
@@ -26,7 +31,7 @@ class SubmitAnswerUseCase:
         # 1. Load aggregate root
         learning_plan = self.learning_plan_repository.get_by_id(learning_plan_id)
         if not learning_plan:
-            raise ValueError("LearningPlan not found")
+            raise LearningPlanNotFoundException(learning_plan_id=learning_plan_id)
 
         # 2. Locate study session
         session = next(
@@ -34,12 +39,15 @@ class SubmitAnswerUseCase:
             None
         )
         if not session:
-            raise ValueError("StudySession not found")
+            raise StudySessionNotFoundException(study_session_id=study_session_id)
 
         # 3. Validate question belongs to session
         session_question = session.questions.get(question_id)
         if not session_question:
-            raise ValueError("Question not part of this StudySession")
+            raise QuestionNotInStudySessionException(
+                question_id=question_id,
+                study_session_id=study_session_id
+            )
 
         # 4. Submit answer (creates AnswerAttempt)
         session_question.submit_answer(user_answer)

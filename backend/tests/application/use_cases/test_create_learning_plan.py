@@ -3,6 +3,9 @@ import pytest
 from unittest.mock import Mock
 import uuid
 
+from application.common.exceptions import (
+    KUNotGeneratedException
+)
 from application.use_cases.create_learning_plan import (
     CreateLearningPlanFromDocumentUseCase,
 )
@@ -117,7 +120,7 @@ class TestCreateLearningPlanFromDocumentUseCase:
         sample_document: Document,
         learning_plan_repository: InMemoryLearningPlanRepository,
     ) -> None:
-        """Should raise ValueError when no knowledge units are generated."""
+        """Should raise KUNotGeneratedException when no knowledge units are generated."""
         # Arrange
         mock_ku_generator = Mock(spec=KnowledgeUnitGenerationService)
         mock_ku_generator.generate_knowledge_units.return_value = []
@@ -132,5 +135,5 @@ class TestCreateLearningPlanFromDocumentUseCase:
         )
 
         # Act & Assert
-        with pytest.raises(ValueError, match="No knowledge units could be generated"):
+        with pytest.raises(KUNotGeneratedException, match="No knowledge units could be generated from document"):
             use_case.execute(sample_document)

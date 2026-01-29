@@ -4,6 +4,10 @@ import uuid
 from unittest.mock import Mock
 
 from application.use_cases.update_ku_mastery import UpdateKnowledgeUnitMasteryUseCase
+from application.common.exceptions import (
+    LearningPlanNotFoundException,
+    KUNotInLearningPlanException,
+)
 from domain.entities.learning import LearningPlan, StudySession
 from domain.entities.knowledge_unit import KnowledgeUnit
 from domain.entities.question import QuestionID, SessionQuestion, AnswerAssessment, AnswerAttempt, QuestionStatus
@@ -223,7 +227,7 @@ class TestUpdateKnowledgeUnitMasteryUseCase:
     def test_raises_error_when_learning_plan_not_found(
         learning_plan_repository: InMemoryLearningPlanRepository,
     ) -> None:
-        """Should raise ValueError when learning plan is not found."""
+        """Should raise LearningPlanNotFoundException when learning plan is not found."""
         # Arrange
         mock_mastery_service = Mock(spec=MasteryService)
 
@@ -233,7 +237,7 @@ class TestUpdateKnowledgeUnitMasteryUseCase:
         )
 
         # Act & Assert
-        with pytest.raises(ValueError, match="LearningPlan not found"):
+        with pytest.raises(LearningPlanNotFoundException):
             use_case.execute(
                 learning_plan_id="non-existent-id",
                 knowledge_unit_id="ku-id",
@@ -244,7 +248,7 @@ class TestUpdateKnowledgeUnitMasteryUseCase:
         sample_learning_plan: LearningPlan,
         learning_plan_repository: InMemoryLearningPlanRepository,
     ) -> None:
-        """Should raise ValueError when knowledge unit is not part of the learning plan."""
+        """Should raise KUNotInLearningPlanException when knowledge unit is not part of the learning plan."""
         # Arrange
         learning_plan_repository.save(sample_learning_plan)
 
@@ -256,7 +260,7 @@ class TestUpdateKnowledgeUnitMasteryUseCase:
         )
 
         # Act & Assert
-        with pytest.raises(ValueError, match="KnowledgeUnit not part of LearningPlan"):
+        with pytest.raises(KUNotInLearningPlanException):
             use_case.execute(
                 learning_plan_id=sample_learning_plan.id,
                 knowledge_unit_id="non-existent-ku-id",

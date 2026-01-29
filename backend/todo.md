@@ -31,9 +31,7 @@ Experimentation with opik -> Focus on KU Generation
 
 ## Day 2 (29 January)
 
-Be able to modify prompts in KU Generation?? Also fix the prompt since it does not contain system message. https://www.comet.com/docs/opik/prompt_engineering/prompt_management
-Handle learning plan errors
-Add source claims to knowledge units (no estoy seguro de que aporte valor, pero sería bueno tenerlo para redondear el modelo)
+Add source claims to knowledge units (no estoy seguro de que aporte valor, pero sería bueno tenerlo para redondear el modelo, Y mejorar el prompt)
 
 ## Day 3 (30 January)
 
