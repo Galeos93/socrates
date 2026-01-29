@@ -49,13 +49,6 @@ class FactKnowledge(KnowledgeUnit):
     \"\"\"Knowledge about a document claim.\"\"\"
     target_claim: Claim
 
-OUTPUT:
-
-KURelevance. How useful are these KnowledgeUnits for learning the input material?
-KUGrounding. Are claims fully supported by the input text (no hallucination)?
-KUDiversity. Do the KnowledgeUnits cover distinct aspects of the input?
-KUComplexity. Do some KnowledgeUnits require synthesis across multiple parts of the input?
-KURedundancy. How much unnecessary repetition exists?
 """
         self.user_prompt_template = """You are an impartial AI judge.
 

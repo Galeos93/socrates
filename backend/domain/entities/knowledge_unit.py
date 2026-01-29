@@ -26,5 +26,6 @@ class SkillKnowledge(KnowledgeUnit):
 @dataclass(kw_only=True)
 class FactKnowledge(KnowledgeUnit):
     """Knowledge about a document claim."""
+    # source_claims: List[Claim]  #  NOTE: We may have to update this if we want to infer complex claims from simpler ones
     target_claim: Claim
 

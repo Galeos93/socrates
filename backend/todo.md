@@ -25,19 +25,20 @@ como entra aquí el tema de Comet:
 
 # Plan
 
-## Day 1 (28 January)
+## Day 1 (28 January) [DONE]
 
 Experimentation with opik -> Focus on KU Generation
 
-## Day 2 (29 January)
+## Day 2 (29 January) [DONE]
 
-Add source claims to knowledge units (no estoy seguro de que aporte valor, pero sería bueno tenerlo para redondear el modelo, Y mejorar el prompt)
+Add source claims to knowledge units (no estoy seguro de que aporte valor, pero sería bueno tenerlo para redondear el modelo, Y mejorar el prompt) [NOPE]
 
 ## Day 3 (30 January)
 
 Arreglar hint de Socrates
 Borrar cosas de la UI que no aportan nada
 Mejorar performance de parseo PDF (quizas imagen es muy pesada? puedo tambier usar asincronimso)
+Intentar mejorar la métrica de redundancy...
 
 ## Day 4 (31 January)
 

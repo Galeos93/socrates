@@ -18,13 +18,14 @@ from infrastructure.adapters.knowledge_unit_generation.llm.service import LLMKno
 EXPERIMENT_NAME = "exp_001_knowledge_unit_generation_evaluation"
 DATASET_NAME = "KU_GEN_TEXT_ANALYS IS"
 OPIK_TEMPLATE_NAME = "KnowledgeUnitGenerationPrompt"
+PROJECT_NAME = "playground"
 
 
 # Configure Opik
 opik.configure()
 
 # Get or create a dataset
-client = Opik()
+client = Opik(project_name=PROJECT_NAME)
 
 # OpenAI client
 openai_client =OpenAI()
@@ -33,6 +34,10 @@ class TemplateRepo(PromptTemplateRepository):
     @staticmethod
     def get(name: str, version: str) -> str:
         return TEMPLATE_V1
+
+    @staticmethod
+    def save(name: str, content: str, version: str) -> None:
+        pass
 
 
 ku_generation_service = LLMKnowledgeUnitGenerationService(
