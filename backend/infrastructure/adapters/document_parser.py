@@ -121,15 +121,8 @@ class LLMOCRDocumentParser(DocumentParser):
         mat = pymupdf.Matrix(zoom, zoom)
 
         for page in doc:
-            pix = page.get_pixmap(
-                matrix=mat,
-                colorspace=pymupdf.csGRAY
-            )
-            img = Image.frombytes(
-                "L",
-                (pix.width, pix.height),
-                pix.samples
-            )
+            pix = page.get_pixmap(matrix=mat, colorspace=pymupdf.csGRAY)
+            img = Image.frombytes("L", [pix.width, pix.height], pix.samples)
             images.append(img)
 
         doc.close()

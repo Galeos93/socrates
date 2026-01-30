@@ -40,12 +40,12 @@ class TestBatchQuestionGeneration:
         service = LLMQuestionGenerationService(client=client, model="gpt-4o")
 
         # Generate batch of questions
-        count = 3
-        questions = service.generate_questions_batch(fact_knowledge, count)
+        max_count = 3
+        questions = service.generate_questions_batch(fact_knowledge, max_count=max_count)
 
         # Assertions
-        assert len(questions) == count, f"Expected {count} questions, got {len(questions)}"
-        
+        assert len(questions) <= max_count, f"Expected up to {max_count} questions, got {len(questions)}"
+
         # All questions should be valid
         for question in questions:
             assert question.text, "Question text is empty"
@@ -55,7 +55,7 @@ class TestBatchQuestionGeneration:
 
         # Questions should be different
         question_texts = [q.text for q in questions]
-        assert len(set(question_texts)) == count, "Questions are not diverse - duplicates found"
+        assert len(set(question_texts)) == len(question_texts), "Questions are not diverse - duplicates found"
 
     @staticmethod
     def test_batch_question_generation_skill_knowledge():
@@ -90,7 +90,7 @@ class TestBatchQuestionGeneration:
 
         # Assertions
         assert len(questions) == count, f"Expected {count} questions, got {len(questions)}"
-        
+
         # All questions should be valid
         for question in questions:
             assert question.text, "Question text is empty"
@@ -128,6 +128,6 @@ class TestBatchQuestionGeneration:
 
         # Questions for high mastery should tend toward higher difficulty
         avg_difficulty_high = sum(q.difficulty.level for q in high_mastery_questions) / len(high_mastery_questions)
-        
+
         # At high mastery, average difficulty should be >= 3
         assert avg_difficulty_high >= 3, f"High mastery questions should be harder, got avg difficulty {avg_difficulty_high}"

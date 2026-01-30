@@ -27,7 +27,7 @@ class QuestionGenerationService(ABC):
     def generate_questions_batch(
         self,
         ku: KnowledgeUnit,
-        count: int
+        max_count: int
     ) -> list[Question]:
         """Generate multiple diverse questions for a KnowledgeUnit.
 
@@ -35,8 +35,8 @@ class QuestionGenerationService(ABC):
         ----------
         ku: KnowledgeUnit
             The fact or skill to generate questions for.
-        count: int
-            Number of questions to generate.
+        max_count: int
+            Max number of questions to generate.
 
         Returns
         -------

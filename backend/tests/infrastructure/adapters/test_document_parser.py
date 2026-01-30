@@ -73,12 +73,17 @@ class TestLLMOCRDocumentParser:
 
     @staticmethod
     def test_extract_text_from_image_calls_openai(parser, mock_openai_client):
-        """Test that text extraction calls OpenAI API correctly."""
+        """Test that batched text extraction calls OpenAI API correctly."""
         # Create a test image
         img = Image.new('RGB', (100, 100), color='blue')
 
-        # Extract text
-        text = parser._extract_text_from_image(img, page_num=1)
+        # Mock batch response with single page
+        mock_openai_client.chat.completions.create.return_value.choices[0].message.content = (
+            "Extracted text from page"
+        )
+
+        # Extract text via batch method
+        texts = parser._extract_text_from_images_batch([img], start_page=1)
 
         # Verify OpenAI was called
         assert mock_openai_client.chat.completions.create.called
@@ -94,7 +99,7 @@ class TestLLMOCRDocumentParser:
         assert len(messages[0]['content']) == 2  # text + image
 
         # Verify extracted text
-        assert text == "Extracted text from page"
+        assert texts == ["Extracted text from page"]
 
     @staticmethod
     def test_parse_creates_document_with_metadata(parser, mock_openai_client, monkeypatch):
@@ -129,7 +134,7 @@ class TestLLMOCRDocumentParser:
         assert document.metadata is not None
         assert document.metadata['filename'] == "test_document.pdf"
         assert document.metadata['num_pages'] == 1
-        assert document.metadata['parser'] == "llm_ocr"
+        assert document.metadata['parser'] == "llm_ocr_batched"
 
 
 @pytest.mark.integration
