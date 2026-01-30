@@ -104,12 +104,11 @@ class TestLLMOCRDocumentParser:
         mock_page = Mock()
         mock_pixmap = Mock()
 
-        # Mock pixmap.tobytes to return fake PNG data
-        fake_png = Image.new('RGB', (100, 100), color='green')
-        img_buffer = io.BytesIO()
-        fake_png.save(img_buffer, format='PNG')
-        img_buffer.seek(0)
-        mock_pixmap.tobytes.return_value = img_buffer.getvalue()
+        # Mock pixmap data for grayscale image construction
+        width, height = 100, 100
+        mock_pixmap.width = width
+        mock_pixmap.height = height
+        mock_pixmap.samples = b"\x80" * (width * height)
 
         # Mock page.get_pixmap to return the pixmap
         mock_page.get_pixmap.return_value = mock_pixmap
