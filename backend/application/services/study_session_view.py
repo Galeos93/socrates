@@ -13,7 +13,7 @@ class StudySessionViewService:
 
     def build_view(self, session: StudySession) -> StudySessionView:
         question_ids = [q_id for q_id in session.questions.keys()]
-        session_questions: list[SessionQuestion] = session.questions.values()
+        session_questions: list[SessionQuestion] = list(session.questions.values())
         questions: list[Question] = [
             self.question_repository.get_by_id(q_id)
             for q_id in question_ids
@@ -28,6 +28,7 @@ class StudySessionViewService:
                 attempts=len(session_question.attempts),
                 correct_answer=question.correct_answer,
                 difficulty=question.difficulty.level,
+                user_answer=session_question.attempts[-1] if session_question.attempts else None,
             )
             for session_question, question in zip(session_questions, questions)
         ]

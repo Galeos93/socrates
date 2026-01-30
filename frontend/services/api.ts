@@ -3,6 +3,7 @@ import {
   IngestResponse,
   LearningPlanResponse,
   LearningPlanDetails,
+  LearningPlanSummary,
   StartSessionResponse,
   StudySessionView,
   AssessmentResponse,
@@ -30,6 +31,13 @@ const BASE_URL = apiHost.startsWith('http') ? apiHost : `https://${apiHost}`;
  */
 
 export const api = {
+  async listLearningPlans(): Promise<LearningPlanSummary[]> {
+    const response = await fetch(`${BASE_URL}/learning-plans`);
+
+    if (!response.ok) throw new Error('Failed to list learning plans');
+    return response.json();
+  },
+
   async ingestDocument(file: File): Promise<IngestResponse> {
     const formData = new FormData();
     formData.append('file', file);

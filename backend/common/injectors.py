@@ -19,6 +19,7 @@ from application.use_cases.create_learning_plan import (
 from application.use_cases.document_ingestion import IngestDocumentUseCase
 from application.use_cases.get_learning_plan import GetLearningPlanUseCase
 from application.use_cases.get_study_session import GetStudySessionViewUseCase
+from application.use_cases.list_learning_plans import ListLearningPlansUseCase
 from application.use_cases.start_study_session import StartStudySessionUseCase
 from application.use_cases.submit_answer import SubmitAnswerUseCase
 from application.use_cases.update_ku_mastery import UpdateKnowledgeUnitMasteryUseCase
@@ -57,6 +58,7 @@ from infrastructure.api.fastapi.create_learning_plan_api import (
 )
 from infrastructure.api.fastapi.get_learning_plan_api import GetLearningPlanAPIImpl
 from infrastructure.api.fastapi.get_study_session_api import GetStudySessionAPIImpl
+from infrastructure.api.fastapi.list_learning_plans_api import ListLearningPlansAPIImpl
 from infrastructure.api.fastapi.ingest_document_api import IngestDocumentAPIBase
 from infrastructure.api.fastapi.start_study_session_api import StartStudySessionAPIImpl
 from infrastructure.api.fastapi.submit_answer_api import SubmitAnswerAPIImpl
@@ -207,11 +209,11 @@ def get_assessment_feedback_service() -> OpikAssessmentFeedbackService:
         # Return a no-op version if tracking is disabled
         from domain.ports.feedback_service import AssessmentFeedbackService
         from domain.entities.question import AssessmentFeedback
-        
+
         class NoOpAssessmentFeedbackService(AssessmentFeedbackService):
             def submit_feedback(self, feedback: AssessmentFeedback) -> None:
                 logging.info(f"[NoOpAssessmentFeedbackService] Feedback submission disabled: {feedback.id}")
-        
+
         return NoOpAssessmentFeedbackService()
 
 
@@ -223,11 +225,11 @@ def get_question_feedback_service() -> OpikQuestionFeedbackService:
         # Return a no-op version if tracking is disabled
         from domain.ports.feedback_service import QuestionFeedbackService
         from domain.entities.question import QuestionFeedback
-        
+
         class NoOpQuestionFeedbackService(QuestionFeedbackService):
             def submit_feedback(self, feedback: QuestionFeedback) -> None:
                 logging.info(f"[NoOpQuestionFeedbackService] Feedback submission disabled: {feedback.id}")
-        
+
         return NoOpQuestionFeedbackService()
 
 
@@ -258,6 +260,13 @@ def get_create_learning_plan_use_case() -> CreateLearningPlanFromDocumentUseCase
 def get_learning_plan_use_case() -> GetLearningPlanUseCase:
     """Create get learning plan use case instance."""
     return GetLearningPlanUseCase(
+        learning_plan_repository=get_learning_plan_repository(),
+    )
+
+
+def get_list_learning_plans_use_case() -> ListLearningPlansUseCase:
+    """Create list learning plans use case instance."""
+    return ListLearningPlansUseCase(
         learning_plan_repository=get_learning_plan_repository(),
     )
 
@@ -348,6 +357,13 @@ def get_learning_plan_api() -> GetLearningPlanAPIImpl:
     """Create get learning plan API instance."""
     return GetLearningPlanAPIImpl(
         get_learning_plan_use_case=get_learning_plan_use_case(),
+    )
+
+
+def get_list_learning_plans_api() -> ListLearningPlansAPIImpl:
+    """Create list learning plans API instance."""
+    return ListLearningPlansAPIImpl(
+        list_learning_plans_use_case=get_list_learning_plans_use_case(),
     )
 
 

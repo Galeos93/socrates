@@ -92,6 +92,7 @@ def create_app():
         ingest_document_api=injectors.get_ingest_document_api(),
         create_learning_plan_api=injectors.get_create_learning_plan_api(),
         get_learning_plan_api=injectors.get_learning_plan_api(),
+        list_learning_plans_api=injectors.get_list_learning_plans_api(),
         start_study_session_api=injectors.get_start_study_session_api(),
         get_study_session_api=injectors.get_get_study_session_api(),
         submit_answer_api=injectors.get_submit_answer_api(),

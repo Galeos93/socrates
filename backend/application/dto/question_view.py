@@ -14,3 +14,4 @@ class QuestionView:
     difficulty: int
     attempts: int
     correct_answer: Answer | None = None
+    user_answer: str | None = None  # The user's last submitted answer

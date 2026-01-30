@@ -23,6 +23,24 @@ export interface LearningPlanResponse {
   created_at: string;
 }
 
+export interface IncompleteSession {
+  session_id: SessionID;
+  questions_answered: number;
+  total_questions: number;
+  max_questions: number;
+  started_at: string;
+}
+
+export interface LearningPlanSummary {
+  learning_plan_id: LearningPlanID;
+  knowledge_unit_count: number;
+  average_mastery: number;
+  created_at: string;
+  completed_at: string | null;
+  session_count: number;
+  incomplete_sessions: IncompleteSession[];
+}
+
 export interface LearningPlanDetails {
   learning_plan_id: LearningPlanID;
   knowledge_unit_count: number;
@@ -37,6 +55,8 @@ export interface Question {
   difficulty: number;
   knowledge_unit_id: KnowledgeUnitID;
   correct_answer?: string;
+  user_answer?: string;  // Track if question was already answered
+  is_correct?: boolean;  // Track if answer was assessed as correct
 }
 
 export interface StudySessionView {
@@ -44,6 +64,7 @@ export interface StudySessionView {
   questions: Question[];
   progress: number;
   max_questions: number;
+  is_completed?: boolean;
 }
 
 export interface StartSessionResponse {

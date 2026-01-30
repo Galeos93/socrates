@@ -51,6 +51,8 @@ Borrar cosas de la UI que no aportan nada (mantener dashboard, etc???)
 
 Intentar crear una dashboard de learning plan para poder continuar con el estudio
 Borrar cosas de la UI que no aportan nada (mantener dashboard, etc???)
+  - Fix the usage, no completeness is badly calculated!
+  - Add tests to the new use cases!!!!
 
 ## Day 5 (1 February)
 

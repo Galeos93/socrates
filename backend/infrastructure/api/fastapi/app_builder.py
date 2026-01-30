@@ -14,6 +14,7 @@ from application.common.exceptions import (
 from infrastructure.api.fastapi.create_learning_plan_api import CreateLearningPlanAPIBase
 from infrastructure.api.fastapi.get_learning_plan_api import GetLearningPlanAPIBase
 from infrastructure.api.fastapi.start_study_session_api import StartStudySessionAPIBase
+from infrastructure.api.fastapi.list_learning_plans_api import ListLearningPlansAPIBase
 from infrastructure.api.fastapi.get_study_session_api import GetStudySessionAPIBase
 from infrastructure.api.fastapi.submit_answer_api import SubmitAnswerAPIBase
 from infrastructure.api.fastapi.assess_question_api import AssessQuestionAPIBase
@@ -30,6 +31,7 @@ class AppBuilder:
     ingest_document_api: Optional[IngestDocumentAPIBase] = None
     create_learning_plan_api: Optional[CreateLearningPlanAPIBase] = None
     get_learning_plan_api: Optional[GetLearningPlanAPIBase] = None
+    list_learning_plans_api: Optional[ListLearningPlansAPIBase] = None
     start_study_session_api: Optional[StartStudySessionAPIBase] = None
     get_study_session_api: Optional[GetStudySessionAPIBase] = None
     submit_answer_api: Optional[SubmitAnswerAPIBase] = None
@@ -45,6 +47,8 @@ class AppBuilder:
     def register_learning_plan_routes(self, app: FastAPI) -> None:
         """Register learning plan routes."""
         app.post("/learning-plans")(self.create_learning_plan_api.create_learning_plan)
+        if self.list_learning_plans_api:
+            app.get("/learning-plans")(self.list_learning_plans_api.list_learning_plans)
         if self.get_learning_plan_api:
             app.get("/learning-plans/{learning_plan_id}")(self.get_learning_plan_api.get_learning_plan)
 

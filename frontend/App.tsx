@@ -1,11 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Home, BookOpen, Brain, CheckCircle, ChevronRight, Upload, Loader2, Sparkles, BookText, BarChart2, ThumbsUp, ThumbsDown, MessageSquare } from 'lucide-react';
+import { Home, BookOpen, Brain, CheckCircle, ChevronRight, Upload, Loader2, Sparkles, BookText, BarChart2, ThumbsUp, ThumbsDown, MessageSquare, ArrowLeft, PlayCircle, PlusCircle, Clock, FolderOpen } from 'lucide-react';
 import { api } from './services/api';
-import { StudySessionView, Question, AssessmentResponse, LearningPlanDetails } from './types';
+import { StudySessionView, Question, AssessmentResponse, LearningPlanDetails, LearningPlanSummary } from './types';
 import { geminiService } from './services/geminiService';
 
 // --- Sub-components ---
+
+type AppView = 'home' | 'upload' | 'plan' | 'study';
 
 const StepIndicator = ({ currentStep }: { currentStep: number }) => {
   const steps = ["Upload", "Plan", "Study"];
@@ -26,14 +28,25 @@ const StepIndicator = ({ currentStep }: { currentStep: number }) => {
   );
 };
 
-const Header = () => (
+const Header = ({ onHomeClick, showHomeButton }: { onHomeClick?: () => void; showHomeButton?: boolean }) => (
   <header className="py-6 border-b border-slate-200 glass sticky top-0 z-50">
     <div className="container mx-auto px-4 flex justify-between items-center">
-      <div className="flex items-center space-x-2">
-        <div className="bg-indigo-600 p-2 rounded-lg text-white">
-          <Brain size={24} />
+      <div className="flex items-center space-x-4">
+        {showHomeButton && onHomeClick && (
+          <button
+            onClick={onHomeClick}
+            className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors"
+            title="Back to Home"
+          >
+            <ArrowLeft size={20} />
+          </button>
+        )}
+        <div className="flex items-center space-x-2 cursor-pointer" onClick={onHomeClick}>
+          <div className="bg-indigo-600 p-2 rounded-lg text-white">
+            <Brain size={24} />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 serif">Socrates</h1>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 serif">Socrates</h1>
       </div>
       <nav className="hidden md:flex space-x-8">
         <a href="#" className="text-sm font-medium text-slate-600 hover:text-indigo-600">Dashboard</a>
@@ -52,9 +65,13 @@ const Header = () => (
 // --- Main Views ---
 
 const App: React.FC = () => {
-  const [step, setStep] = useState(0); // 0: Upload, 1: Plan Summary, 2: Study Session
+  const [view, setView] = useState<AppView>('home');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Home view state
+  const [learningPlans, setLearningPlans] = useState<LearningPlanSummary[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState(true);
 
   // App State
   const [documentId, setDocumentId] = useState<string | null>(null);
@@ -72,6 +89,69 @@ const App: React.FC = () => {
   const [showAssessmentComment, setShowAssessmentComment] = useState(false);
   const [assessmentComment, setAssessmentComment] = useState('');
 
+  // Load learning plans on mount
+  useEffect(() => {
+    loadLearningPlans();
+  }, []);
+
+  const loadLearningPlans = async () => {
+    setLoadingPlans(true);
+    try {
+      const plans = await api.listLearningPlans();
+      setLearningPlans(plans);
+    } catch (err) {
+      console.error('Failed to load learning plans:', err);
+    } finally {
+      setLoadingPlans(false);
+    }
+  };
+
+  const goHome = () => {
+    setView('home');
+    setError(null);
+    loadLearningPlans();
+  };
+
+  const selectLearningPlan = async (plan: LearningPlanSummary) => {
+    setLoading(true);
+    setError(null);
+    try {
+      setLearningPlanId(plan.learning_plan_id);
+      const planDetails = await api.getLearningPlan(plan.learning_plan_id);
+      setLearningPlanDetails(planDetails);
+      setView('plan');
+    } catch (err) {
+      setError("Failed to load learning plan details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const continueSession = async (plan: LearningPlanSummary, sessionId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      setLearningPlanId(plan.learning_plan_id);
+      const planDetails = await api.getLearningPlan(plan.learning_plan_id);
+      setLearningPlanDetails(planDetails);
+
+      const sessionData = await api.getStudySession(plan.learning_plan_id, sessionId);
+      setSession(sessionData);
+
+      // Find the first unanswered question
+      const firstUnansweredIdx = sessionData.questions.findIndex(q => !q.user_answer);
+      setCurrentQuestionIdx(firstUnansweredIdx >= 0 ? firstUnansweredIdx : 0);
+
+      setAnswer('');
+      setAssessment(null);
+      setHint(null);
+      setView('study');
+    } catch (err) {
+      setError("Failed to continue session.");
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -90,7 +170,7 @@ const App: React.FC = () => {
       const planDetails = await api.getLearningPlan(planRes.learning_plan_id);
       setLearningPlanDetails(planDetails);
 
-      setStep(1);
+      setView('plan');
     } catch (err) {
       setError("Failed to process document. Ensure the backend is running");
     } finally {
@@ -105,7 +185,7 @@ const App: React.FC = () => {
       const res = await api.startStudySession(learningPlanId);
       const sessionData = await api.getStudySession(learningPlanId, res.session_id);
       setSession(sessionData);
-      setStep(2);
+      setView('study');
       setCurrentQuestionIdx(0);
       setAnswer('');
       setAssessment(null);
@@ -157,7 +237,7 @@ const App: React.FC = () => {
       setAssessmentComment('');
     } else {
       // Completed session - go back to plan summary
-      setStep(1);
+      setView('plan');
     }
   };
 
@@ -203,10 +283,10 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <Header onHomeClick={goHome} showHomeButton={view !== 'home'} />
 
       <main className="flex-grow container mx-auto px-4 py-12 max-w-4xl">
-        <StepIndicator currentStep={step} />
+        {view !== 'home' && <StepIndicator currentStep={view === 'upload' ? 0 : view === 'plan' ? 1 : 2} />}
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 flex items-center space-x-3">
@@ -215,8 +295,142 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* STEP 0: UPLOAD */}
-        {step === 0 && (
+        {/* HOME VIEW */}
+        {view === 'home' && (
+          <div className="space-y-8 animate-in fade-in duration-700">
+            <div className="text-center space-y-4">
+              <h2 className="text-4xl font-bold text-slate-900 serif">Welcome Back</h2>
+              <p className="text-xl text-slate-500 max-w-2xl mx-auto">
+                Continue your learning journey or start mastering new material.
+              </p>
+            </div>
+
+            {/* Create New Learning Plan Button */}
+            <div className="flex justify-center">
+              <button
+                onClick={() => setView('upload')}
+                className="flex items-center space-x-3 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-200"
+              >
+                <PlusCircle size={24} />
+                <span>New Learning Plan</span>
+              </button>
+            </div>
+
+            {/* Existing Learning Plans */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-slate-800 flex items-center space-x-2">
+                <FolderOpen size={24} className="text-slate-600" />
+                <span>Your Learning Plans</span>
+              </h3>
+
+              {loadingPlans ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+                </div>
+              ) : learningPlans.length === 0 ? (
+                <div className="text-center py-12 bg-slate-50 rounded-2xl border border-slate-200">
+                  <BookOpen className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                  <p className="text-slate-600 font-medium">No learning plans yet</p>
+                  <p className="text-slate-400 text-sm mt-1">Upload a document to get started</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {learningPlans.map((plan) => (
+                    <div
+                      key={plan.learning_plan_id}
+                      className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-grow">
+                          <div className="flex items-center space-x-3 mb-3">
+                            <span className="text-sm text-slate-500">
+                              Created {new Date(plan.created_at).toLocaleDateString()}
+                            </span>
+                            <span className="text-slate-300">•</span>
+                            <span className="text-sm text-slate-500">
+                              {plan.knowledge_unit_count} knowledge units
+                            </span>
+                            <span className="text-slate-300">•</span>
+                            <span className="text-sm text-slate-500">
+                              {plan.session_count} session{plan.session_count !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+
+                          {/* Mastery Progress */}
+                          <div className="flex items-center space-x-4 mb-4">
+                            <div className="flex-grow h-3 bg-slate-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-indigo-600 rounded-full transition-all duration-500"
+                                style={{ width: `${plan.average_mastery * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-lg font-bold text-slate-700">
+                              {Math.round(plan.average_mastery * 100)}%
+                            </span>
+                          </div>
+
+                          {/* Incomplete Sessions */}
+                          {plan.incomplete_sessions.length > 0 && (
+                            <div className="mb-4">
+                              {plan.incomplete_sessions.map((incSession) => (
+                                <button
+                                  key={incSession.session_id}
+                                  onClick={() => continueSession(plan, incSession.session_id)}
+                                  disabled={loading}
+                                  className="flex items-center space-x-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-sm font-medium transition-colors border border-amber-200"
+                                >
+                                  <Clock size={16} />
+                                  <span>
+                                    Continue session ({incSession.questions_answered}/{incSession.total_questions} questions answered)
+                                  </span>
+                                  <ChevronRight size={16} />
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex space-x-3 ml-4">
+                          <button
+                            onClick={() => selectLearningPlan(plan)}
+                            disabled={loading}
+                            className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors"
+                          >
+                            <PlayCircle size={18} />
+                            <span>{plan.session_count === 0 ? 'Start Learning' : 'New Session'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Features */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left mt-12">
+              <FeatureCard
+                icon={<BookText className="text-indigo-500" />}
+                title="Claim Extraction"
+                desc="Socrates identifies atomic statements verifiable within your text."
+              />
+              <FeatureCard
+                icon={<Sparkles className="text-emerald-500" />}
+                title="Skill Application"
+                desc="Go beyond comprehension by testing your ability to apply knowledge."
+              />
+              <FeatureCard
+                icon={<BarChart2 className="text-amber-500" />}
+                title="Mastery Tracking"
+                desc="Track your progress with a dynamic model of your understanding."
+              />
+            </div>
+          </div>
+        )}
+
+        {/* UPLOAD VIEW */}
+        {view === 'upload' && (
           <div className="text-center space-y-8 animate-in fade-in duration-700">
             <div className="space-y-4">
               <h2 className="text-4xl font-bold text-slate-900 serif">Deepen Your Knowledge</h2>
@@ -264,8 +478,8 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* STEP 1: PLAN SUMMARY */}
-        {step === 1 && (
+        {/* PLAN SUMMARY VIEW */}
+        {view === 'plan' && (
           <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-8 border border-slate-100 animate-in slide-in-from-bottom-4 duration-500">
             <div className="flex justify-between items-start mb-8">
               <div>
@@ -313,8 +527,8 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* STEP 2: STUDY SESSION */}
-        {step === 2 && session && (
+        {/* STUDY SESSION VIEW */}
+        {view === 'study' && session && (
           <div className="space-y-6 animate-in fade-in duration-500">
             {/* Progress Bar */}
             <div className="flex items-center space-x-4">
