@@ -14,7 +14,7 @@ from domain.ports.document_parser import DocumentParser
 class LLMOCRDocumentParser(DocumentParser):
     """
     LLM-based OCR document parser that uses OpenAI's vision API to extract text from PDFs.
-    
+
     Converts PDF pages to images and sends them to the LLM for text extraction.
     Currently only supports PDF files.
     """
@@ -32,6 +32,8 @@ class LLMOCRDocumentParser(DocumentParser):
         """
         self.client = client
         self.model = model
+        self.max_tokens_per_page = 1500
+        self.dpi = 150  # DPI for image conversion
 
     def parse(self, file_bytes: bytes, filename: str) -> Document:
         """
@@ -103,16 +105,13 @@ class LLMOCRDocumentParser(DocumentParser):
         doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
 
         images = []
+        zoom = self.dpi / 72  # DPI is usually enough for OCR
+        mat = pymupdf.Matrix(zoom, zoom)
+
         for page in doc:
-            # Convert page to image (pixmap)
-            # Using matrix for 200 DPI (zoom factor ~2.78)
-            mat = pymupdf.Matrix(200 / 72, 200 / 72)
-            pix = page.get_pixmap(matrix=mat)
-            
-            # Convert pixmap to PIL Image
-            img_data = pix.tobytes("png")
-            image = Image.open(io.BytesIO(img_data))
-            images.append(image)
+            pix = page.get_pixmap(matrix=mat, colorspace=pymupdf.csGRAY)
+            img = Image.frombytes("L", [pix.width, pix.height], pix.samples)
+            images.append(img)
 
         doc.close()
         return images
@@ -161,7 +160,7 @@ class LLMOCRDocumentParser(DocumentParser):
                     ]
                 }
             ],
-            max_tokens=4096
+            max_tokens=self.max_tokens_per_page
         )
 
         # Extract text from response
@@ -183,6 +182,5 @@ class LLMOCRDocumentParser(DocumentParser):
             Base64 encoded image string.
         """
         buffer = io.BytesIO()
-        image.save(buffer, format="PNG")
-        buffer.seek(0)
-        return base64.b64encode(buffer.read()).decode("utf-8")
+        image.save(buffer, format="JPEG", quality=70, optimize=True)
+        return base64.b64encode(buffer.getvalue()).decode()
