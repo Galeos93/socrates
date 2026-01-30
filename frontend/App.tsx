@@ -232,7 +232,7 @@ const App: React.FC = () => {
                     <Upload className="w-8 h-8 text-indigo-600" />
                   </div>
                   <p className="mb-2 text-lg font-semibold text-slate-700">Drop your study material here</p>
-                  <p className="text-sm text-slate-400">PDF, TXT, or Document (Max 10MB)</p>
+                  <p className="text-sm text-slate-400">PDF Document (Max 10MB)</p>
                 </div>
                 <input type="file" className="hidden" accept=".pdf,.txt,.doc,.docx" onChange={handleFileUpload} disabled={loading} />
               </label>
@@ -295,24 +295,6 @@ const App: React.FC = () => {
                     style={{ width: `${learningPlanDetails ? learningPlanDetails.average_mastery * 100 : 0}%` }}
                   />
                 </div>
-              </div>
-            </div>
-
-            <div className="space-y-4 mb-8">
-              <h3 className="font-bold text-lg">Coming Up in Next Session</h3>
-              <div className="space-y-3">
-                {[
-                  "Core Vocabulary and Concepts",
-                  "Applied Problem Solving",
-                  "Theoretical Framework Analysis"
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center space-x-4 p-4 rounded-xl border border-slate-100 bg-white">
-                    <div className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">
-                      {i + 1}
-                    </div>
-                    <span className="text-slate-700 font-medium">{item}</span>
-                  </div>
-                ))}
               </div>
             </div>
 
@@ -519,7 +501,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="py-8 border-t border-slate-100 text-center text-slate-400 text-sm">
-        <p>© 2024 Socrates Study Assistant. Built with Clean Architecture & LLMs.</p>
+        <p>© 2026 Socrates Study Assistant.</p>
       </footer>
     </div>
   );

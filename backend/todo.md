@@ -36,7 +36,7 @@ Add source claims to knowledge units (no estoy seguro de que aporte valor, pero 
 ## Day 3 (30 January)
 
 Arreglar hint de Socrates: Ahora mismo no puedo obtener la respuesta directamente [DONE]
-Borrar cosas de la UI que no aportan nada
+Borrar cosas de la UI que no aportan nada [DONE]
 Mejorar performance de parseo PDF (quizas imagen es muy pesada? puedo tambier usar asincronimso)
 Intentar mejorar la métrica de redundancy...
 
@@ -45,6 +45,7 @@ Intentar mejorar la métrica de redundancy...
 Checkear que la dificultad se ajusta al mastery
 Revisar calidad de knowledge units
 Intentar crear una dashboard de learning plan para poder continuar con el estudio
+Borrar cosas de la UI que no aportan nada (mantener dashboard, etc???)
 
 ## Day 5 (1 February)
 
@@ -52,7 +53,7 @@ Intentar crear una dashboard de learning plan para poder continuar con el estudi
 
 ## Day 6 (2 February)
 
-Intentar crear una dashboard de learning plan para poder continuar con el estudio
+DEMO time!
 
 ## Day 7 (3 February)
 

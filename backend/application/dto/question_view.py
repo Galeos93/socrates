@@ -11,5 +11,6 @@ class QuestionView:
     knowledge_unit_id: KnowledgeUnitID
     text: str
     status: QuestionStatus
+    difficulty: int
     attempts: int
     correct_answer: Answer | None = None
