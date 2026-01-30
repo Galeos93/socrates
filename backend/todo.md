@@ -37,13 +37,18 @@ Add source claims to knowledge units (no estoy seguro de que aporte valor, pero 
 
 Arreglar hint de Socrates: Ahora mismo no puedo obtener la respuesta directamente [DONE]
 Borrar cosas de la UI que no aportan nada [DONE]
-Mejorar performance de parseo PDF (quizas imagen es muy pesada? puedo tambier usar asincronimso)
-Intentar mejorar la métrica de redundancy...
+Mejorar performance de parseo PDF (quizas imagen es muy pesada? puedo tambier usar asincronimso) [DONE]
+Intentar mejorar la métrica de redundancy... --> Not a priority for demo! [NOPE]
+
+Intentar crear una dashboard de learning plan para poder continuar con el estudio
+Borrar cosas de la UI que no aportan nada (mantener dashboard, etc???)
 
 ## Day 4 (31 January)
 
-Checkear que la dificultad se ajusta al mastery
-Revisar calidad de knowledge units
+Revisar calidad de knowledge units -> Not a priority for demo! [NOPE]
+Intentar crear una dashboard de learning plan para poder continuar con el estudio
+Borrar cosas de la UI que no aportan nada (mantener dashboard, etc???)
+
 Intentar crear una dashboard de learning plan para poder continuar con el estudio
 Borrar cosas de la UI que no aportan nada (mantener dashboard, etc???)
 
