@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from domain.entities.question import QuestionStatus, QuestionID
+from domain.entities.question import QuestionStatus, QuestionID, Answer
 from domain.entities.knowledge_unit import KnowledgeUnitID
 
 
@@ -12,3 +12,4 @@ class QuestionView:
     text: str
     status: QuestionStatus
     attempts: int
+    correct_answer: Answer | None = None

@@ -165,7 +165,7 @@ const App: React.FC = () => {
     if (!session) return;
     const q = session.questions[currentQuestionIdx];
     setLoading(true);
-    const h = await geminiService.getSocraticHint(q.text);
+    const h = await geminiService.getSocraticHint(q.text, undefined, q.correct_answer);
     setHint(h);
     setLoading(false);
   };

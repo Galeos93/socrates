@@ -36,6 +36,7 @@ export interface Question {
   text: string;
   difficulty: number;
   knowledge_unit_id: KnowledgeUnitID;
+  correct_answer?: string;
 }
 
 export interface StudySessionView {

@@ -8,14 +8,22 @@ export const geminiService = {
   /**
    * Provides a Socratic hint without giving away the answer.
    */
-  async getSocraticHint(questionText: string, context?: string): Promise<string> {
+  async getSocraticHint(
+    questionText: string,
+    context?: string,
+    correctAnswer?: string
+  ): Promise<string> {
     try {
+      const prompt = `I am a student studying the following question: "${questionText}".
+        The context is: "${context || 'General knowledge'}".
+        The correct answer (if known) is: "${correctAnswer || 'Unknown'}".
+        Provide a brief Socratic hint that guides me toward the answer without telling me directly.
+        If the correct answer is provided, use it to craft a better hint but do not reveal it.
+        Be encouraging and brief.`;
+      console.debug("Gemini hint prompt:", prompt);
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: `I am a student studying the following question: "${questionText}". 
-        The context is: "${context || 'General knowledge'}".
-        Provide me with a brief Socratic hint that guides me toward the answer without telling me directly. 
-        Be encouraging and brief.`,
+        contents: prompt,
         config: {
           thinkingConfig: { thinkingBudget: 0 }
         }

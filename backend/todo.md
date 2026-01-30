@@ -35,7 +35,7 @@ Add source claims to knowledge units (no estoy seguro de que aporte valor, pero 
 
 ## Day 3 (30 January)
 
-Arreglar hint de Socrates
+Arreglar hint de Socrates: Ahora mismo no puedo obtener la respuesta directamente [DONE]
 Borrar cosas de la UI que no aportan nada
 Mejorar performance de parseo PDF (quizas imagen es muy pesada? puedo tambier usar asincronimso)
 Intentar mejorar la métrica de redundancy...

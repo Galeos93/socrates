@@ -26,6 +26,7 @@ class StudySessionViewService:
                 text=question.text,
                 status=session_question.status,
                 attempts=len(session_question.attempts),
+                correct_answer=question.correct_answer,
             )
             for session_question, question in zip(session_questions, questions)
         ]
