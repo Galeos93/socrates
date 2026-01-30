@@ -16,6 +16,9 @@ class LLMOCRDocumentParser(DocumentParser):
     LLM-based OCR document parser that uses OpenAI's vision API to extract text from PDFs.
 
     Converts PDF pages to images and sends them to the LLM for text extraction.
+    Pages are processed in batches to minimize the number of OpenAI calls and
+    reduce overall latency.
+
     Currently only supports PDF files.
     """
 
@@ -34,10 +37,15 @@ class LLMOCRDocumentParser(DocumentParser):
         self.model = model
         self.max_tokens_per_page = 1500
         self.dpi = 150  # DPI for image conversion
+        self.batch_size = 4  # Number of pages per OpenAI request
 
     def parse(self, file_bytes: bytes, filename: str) -> Document:
         """
         Parse PDF bytes into a Document entity using LLM-based OCR.
+
+        The PDF is rendered to images, which are then processed in batches.
+        Each batch is sent as a single OpenAI vision request to amortize
+        model and network overhead.
 
         Parameters
         ----------
@@ -55,41 +63,46 @@ class LLMOCRDocumentParser(DocumentParser):
         ------
         ValueError
             If the file format is not PDF.
+        RuntimeError
+            If the number of extracted pages does not match the input pages.
         """
-        # Validate file format
         file_extension = Path(filename).suffix.lower()
         if file_extension != ".pdf":
-            raise ValueError(f"Unsupported file format: {file_extension}. Only PDF files are supported.")
+            raise ValueError(
+                f"Unsupported file format: {file_extension}. Only PDF files are supported."
+            )
 
-        # Convert PDF pages to images
         images = self._pdf_to_images(file_bytes)
 
-        # Extract text from each page using LLM
         page_texts: List[str] = []
-        for page_num, image in enumerate(images, start=1):
-            text = self._extract_text_from_image(image, page_num)
-            page_texts.append(text)
 
-        # Combine all pages
+        for i in range(0, len(images), self.batch_size):
+            batch = images[i:i + self.batch_size]
+            batch_texts = self._extract_text_from_images_batch(
+                batch,
+                start_page=i + 1
+            )
+            page_texts.extend(batch_texts)
+
         full_text = "\n\n".join(page_texts)
 
-        # Create Document entity
         document_id = DocumentID(str(uuid.uuid4()))
-        document = Document(
+        return Document(
             id=document_id,
             text=full_text,
             metadata={
                 "filename": filename,
                 "num_pages": len(images),
-                "parser": "llm_ocr"
+                "parser": "llm_ocr_batched"
             }
         )
-
-        return document
 
     def _pdf_to_images(self, pdf_bytes: bytes) -> List[Image.Image]:
         """
         Convert PDF bytes to a list of PIL images using PyMuPDF.
+
+        Pages are rendered at the configured DPI and converted to grayscale
+        images to reduce payload size while preserving OCR quality.
 
         Parameters
         ----------
@@ -101,71 +114,96 @@ class LLMOCRDocumentParser(DocumentParser):
         List[Image.Image]
             List of PIL images, one per page.
         """
-        # Open PDF from bytes
         doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
 
         images = []
-        zoom = self.dpi / 72  # DPI is usually enough for OCR
+        zoom = self.dpi / 72
         mat = pymupdf.Matrix(zoom, zoom)
 
         for page in doc:
-            pix = page.get_pixmap(matrix=mat, colorspace=pymupdf.csGRAY)
-            img = Image.frombytes("L", [pix.width, pix.height], pix.samples)
+            pix = page.get_pixmap(
+                matrix=mat,
+                colorspace=pymupdf.csGRAY
+            )
+            img = Image.frombytes(
+                "L",
+                (pix.width, pix.height),
+                pix.samples
+            )
             images.append(img)
 
         doc.close()
         return images
 
-    def _extract_text_from_image(self, image: Image.Image, page_num: int) -> str:
+    def _extract_text_from_images_batch(
+        self,
+        images: List[Image.Image],
+        start_page: int
+    ) -> List[str]:
         """
-        Extract text from a single image using OpenAI's vision API.
+        Extract text from multiple page images using a single OpenAI vision request.
+
+        The model is instructed to return text for each page in order, separated
+        by a deterministic page-break marker. The output is split back into
+        per-page text segments.
 
         Parameters
         ----------
-        image : Image.Image
-            PIL image of the page.
-        page_num : int
-            Page number for context.
+        images : List[Image.Image]
+            List of PIL images representing consecutive document pages.
+        start_page : int
+            Page number of the first image in the batch (used for context/debugging).
 
         Returns
         -------
-        str
-            Extracted text from the image.
-        """
-        # Convert PIL image to base64
-        base64_image = self._image_to_base64(image)
+        List[str]
+            Extracted text for each page in the batch, in order.
 
-        # Create prompt for LLM
+        Raises
+        ------
+        RuntimeError
+            If the number of returned page segments does not match the input.
+        """
+        images_b64 = [self._image_to_base64(img) for img in images]
+
         prompt = (
-            "Extract all text from this document page. "
-            "Preserve the structure and formatting as much as possible. "
-            "Include headings, paragraphs, lists, and any other text content. "
-            "Do not add any commentary or explanation - only return the extracted text."
+            "You will receive multiple document page images.\n"
+            "Extract all text from EACH page.\n\n"
+            "Rules:\n"
+            "- Preserve structure and formatting\n"
+            "- Do NOT add commentary or explanations\n"
+            "- Return pages IN ORDER\n"
+            "- Separate pages with this exact marker:\n"
+            "=== PAGE BREAK ===\n"
         )
 
-        # Call OpenAI vision API
+        content = [{"type": "text", "text": prompt}]
+        content.extend(
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{img_b64}"
+                }
+            }
+            for img_b64 in images_b64
+        )
+
         response = self.client.chat.completions.create(
             model=self.model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/png;base64,{base64_image}"
-                            }
-                        }
-                    ]
-                }
-            ],
-            max_tokens=self.max_tokens_per_page
+            messages=[{"role": "user", "content": content}],
+            max_tokens=len(images) * self.max_tokens_per_page
         )
 
-        # Extract text from response
-        extracted_text = response.choices[0].message.content
-        return extracted_text.strip() if extracted_text else ""
+        text = response.choices[0].message.content or ""
+        pages = [p.strip() for p in text.split("=== PAGE BREAK ===")]
+
+        if len(pages) != len(images):
+            raise RuntimeError(
+                f"OCR page count mismatch starting at page {start_page}: "
+                f"expected {len(images)}, got {len(pages)}"
+            )
+
+        return pages
 
     def _image_to_base64(self, image: Image.Image) -> str:
         """
@@ -179,7 +217,7 @@ class LLMOCRDocumentParser(DocumentParser):
         Returns
         -------
         str
-            Base64 encoded image string.
+            Base64-encoded JPEG image string.
         """
         buffer = io.BytesIO()
         image.save(buffer, format="JPEG", quality=70, optimize=True)
