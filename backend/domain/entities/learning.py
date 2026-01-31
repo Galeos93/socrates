@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, UTC
 
 from domain.entities.knowledge_unit import KnowledgeUnit, KnowledgeUnitID
-from domain.entities.question import QuestionID, SessionQuestion
+from domain.entities.question import QuestionID, SessionQuestion, QuestionStatus
 from domain.common.exceptions import (
     LearningPlanIsAlreadyCompletedException,
     StudySessionFullException,
@@ -41,7 +41,30 @@ class StudySession:
         self.questions[question_id] = SessionQuestion(question_id=question_id)
 
     def is_completed(self) -> bool:
-        return self.ended_at is not None
+        """
+        A session is complete when:
+        1. It was explicitly ended (ended_at is set), OR
+        2. All registered questions have been answered (none are PENDING)
+        """
+        # Explicitly ended
+        if self.ended_at is not None:
+            return True
+
+        # Auto-complete: all questions answered
+        if len(self.questions) > 0:
+            all_answered = all(
+                q.status != QuestionStatus.PENDING
+                for q in self.questions.values()
+            )
+            if all_answered:
+                return True
+
+        return False
+
+    def end_early(self) -> None:
+        """Explicitly end the session before all questions are answered."""
+        if self.ended_at is None:
+            self.ended_at = datetime.now(UTC)
 
 
 

@@ -48,16 +48,6 @@ const Header = ({ onHomeClick, showHomeButton }: { onHomeClick?: () => void; sho
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 serif">Socrates</h1>
         </div>
       </div>
-      <nav className="hidden md:flex space-x-8">
-        <a href="#" className="text-sm font-medium text-slate-600 hover:text-indigo-600">Dashboard</a>
-        <a href="#" className="text-sm font-medium text-slate-600 hover:text-indigo-600">Library</a>
-        <a href="#" className="text-sm font-medium text-slate-600 hover:text-indigo-600">Progress</a>
-      </nav>
-      <div className="flex items-center space-x-4">
-        <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
-          <img src="https://picsum.photos/seed/user/100/100" alt="Avatar" />
-        </div>
-      </div>
     </div>
   </header>
 );

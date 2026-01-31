@@ -45,14 +45,8 @@ Borrar cosas de la UI que no aportan nada (mantener dashboard, etc???)
 
 ## Day 4 (31 January)
 
-Revisar calidad de knowledge units -> Not a priority for demo! [NOPE]
-Intentar crear una dashboard de learning plan para poder continuar con el estudio
-Borrar cosas de la UI que no aportan nada (mantener dashboard, etc???)
-
-Intentar crear una dashboard de learning plan para poder continuar con el estudio
-Borrar cosas de la UI que no aportan nada (mantener dashboard, etc???)
-  - Fix the usage, no completeness is badly calculated!
-  - Add tests to the new use cases!!!!
+See why sometimes doc ingestions returns 500
+Start working on pitch
 
 ## Day 5 (1 February)
 
