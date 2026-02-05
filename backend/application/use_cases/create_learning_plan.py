@@ -32,6 +32,8 @@ class CreateLearningPlanFromDocumentUseCase:
     learning_scope_policy: LearningScopePolicy
     learning_plan_repository: LearningPlanRepository
 
+    max_knowledge_units: int = 10
+
     def execute(self, documents: List[Document]) -> LearningPlan:
         logging.info("[CreateLearningPlanFromDocumentUseCase] Creating learning plan from documents.")
         # 1. Generate knowledge units from the document
@@ -40,7 +42,7 @@ class CreateLearningPlanFromDocumentUseCase:
         # 2. Apply learning scope policy
         knowledge_units = self.learning_scope_policy.select_knowledge_units(
             knowledge_units,
-            max_units=10  # Example max_units, adjust as needed
+            max_units=self.max_knowledge_units,
         )
 
         if not knowledge_units:

@@ -161,6 +161,7 @@ def app_client(mock_ku_generator, mock_question_generator, mock_answer_evaluator
         question_generator=mock_question_generator,
         question_repository=question_repo,
         max_questions=5,
+        max_knowledge_units=10,
     )
 
     get_study_session_uc = GetStudySessionViewUseCase(

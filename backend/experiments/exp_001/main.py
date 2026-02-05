@@ -6,6 +6,8 @@ from opik import Opik, Prompt
 import opik
 from openai import OpenAI
 
+from vyper import v
+
 from experiments.exp_001.dataset import DOCUMENTS_DATASET
 from experiments.exp_001.templates import TEMPLATE_V1
 from experiments.exp_001.prompt_factory import OpikPromptFactory
@@ -18,7 +20,7 @@ from infrastructure.adapters.knowledge_unit_generation.llm.service import LLMKno
 EXPERIMENT_NAME = "exp_001_knowledge_unit_generation_evaluation"
 DATASET_NAME = "KU_GEN_TEXT_ANALYS IS"
 OPIK_TEMPLATE_NAME = "KnowledgeUnitGenerationPrompt"
-PROJECT_NAME = "playground"
+PROJECT_NAME = v.get_string("opik.project_name")
 
 
 # Configure Opik

@@ -32,8 +32,8 @@ class StartStudySessionUseCase:
     question_generator: QuestionGenerationService
     question_repository: QuestionRepository
 
-    max_questions: int = 6
-    max_knowledge_units: int = 3
+    max_questions: int
+    max_knowledge_units: int
 
     def execute(self, learning_plan_id: str) -> StudySession:
         logging.info("[StartStudySessionUseCase] Starting new study session.")

@@ -6,9 +6,14 @@ openai:
   completion_model: "gpt-4o"
   vision_model: "gpt-4o"
 
+# Learning plan settings
+learning_plan:
+  max_knowledge_units: 3
+
 # Study session settings
 study_session:
-  max_questions: 10
+  max_questions: 3
+  max_knowledge_units: 3
 
 # Server settings
 server:
@@ -17,5 +22,5 @@ server:
   reload: true  # Set to true for development
 
 opik:
-  project_name: "playground"
+  project_name: "socrates"
   enable_tracking: true

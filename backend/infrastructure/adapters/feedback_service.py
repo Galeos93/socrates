@@ -24,7 +24,7 @@ class OpikAssessmentFeedbackService(AssessmentFeedbackService):
     def __post_init__(self):
         """Initialize Opik client if not provided."""
         if self.opik_client is None:
-            self.opik_client = Opik()
+            self.opik_client = Opik(v.get_string("opik.project_name"))
 
     def submit_feedback(self, feedback: AssessmentFeedback) -> None:
         """

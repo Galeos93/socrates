@@ -120,7 +120,9 @@ def get_document_parser() -> LLMOCRDocumentParser:
     model = v.get_string("openai.vision_model")
     doc_parser = LLMOCRDocumentParser(client=client, model=model)
     if v.get_bool("opik.enable_tracking"):
-        doc_parser.parse = track(doc_parser.parse)
+        doc_parser.parse = track(
+            project_name=v.get_string("opik.project_name")
+        )(doc_parser.parse)
     return doc_parser
 
 
@@ -254,6 +256,7 @@ def get_create_learning_plan_use_case() -> CreateLearningPlanFromDocumentUseCase
         ku_generator=get_knowledge_unit_generator(),
         learning_scope_policy=get_learning_scope_policy(),
         learning_plan_repository=get_learning_plan_repository(),
+        max_knowledge_units=v.get_int("learning_plan.max_knowledge_units"),
     )
 
 
@@ -279,7 +282,8 @@ def get_start_study_session_use_case() -> StartStudySessionUseCase:
         study_focus_policy=get_study_focus_policy(),
         question_generator=get_question_generator(),
         question_repository=get_question_repository(),
-        max_questions=max_questions,
+        max_questions=v.get_int("study_session.max_questions"),
+        max_knowledge_units=v.get_int("study_session.max_knowledge_units"),
     )
 
 
@@ -335,7 +339,9 @@ def get_ingest_document_api() -> IngestDocumentAPIBase:
     api = IngestDocumentAPIBase(ingest_document_use_case=get_ingest_document_use_case())
 
     if v.get_bool("opik.enable_tracking"):
-        api.ingest_document = track(api.ingest_document)
+        api.ingest_document = track(
+            project_name=v.get_string("opik.project_name")
+        )(api.ingest_document)
 
     return api
 
@@ -348,7 +354,9 @@ def get_create_learning_plan_api() -> CreateLearningPlanAPIImpl:
     )
 
     if v.get_bool("opik.enable_tracking"):
-        api.create_learning_plan = track(api.create_learning_plan)
+        api.create_learning_plan = track(v.get_string("opik.project_name"))(
+            api.create_learning_plan
+        )
 
     return api
 
@@ -374,7 +382,9 @@ def get_start_study_session_api() -> StartStudySessionAPIImpl:
     )
 
     if v.get_bool("opik.enable_tracking"):
-        api.start_study_session = track(api.start_study_session)
+        api.start_study_session = track(
+            project_name=v.get_string("opik.project_name")
+        )(api.start_study_session)
 
     return api
 
@@ -395,7 +405,9 @@ def get_assess_question_api() -> AssessQuestionAPIImpl:
     """Create assess question API instance."""
     api = AssessQuestionAPIImpl(assess_question_use_case=get_assess_question_use_case())
     if v.get_bool("opik.enable_tracking"):
-        api.assess_question = track(api.assess_question)
+        api.assess_question = track(
+            project_name=v.get_string("opik.project_name")
+        )(api.assess_question)
     return api
 
 

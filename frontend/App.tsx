@@ -425,7 +425,7 @@ const App: React.FC = () => {
             <div className="space-y-4">
               <h2 className="text-4xl font-bold text-slate-900 serif">Deepen Your Knowledge</h2>
               <p className="text-xl text-slate-500 max-w-2xl mx-auto">
-                Socrates reads your documents, extracts the core claims, and challenges you to apply what you've learned.
+                Socrates reads your documents, extracts the core knowledge, and challenges you to apply what you've learned.
               </p>
             </div>
 
@@ -451,8 +451,8 @@ const App: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left mt-12">
               <FeatureCard
                 icon={<BookText className="text-indigo-500" />}
-                title="Claim Extraction"
-                desc="Socrates identifies atomic statements verifiable within your text."
+                title="Knowledge Extraction"
+                desc="Socrates identifies the core knowledge from your documents."
               />
               <FeatureCard
                 icon={<Sparkles className="text-emerald-500" />}

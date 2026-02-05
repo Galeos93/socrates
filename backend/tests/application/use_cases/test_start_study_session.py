@@ -64,6 +64,7 @@ class TestStartStudySessionUseCase:
             question_generator=mock_question_gen,
             question_repository=question_repository,
             max_questions=5,
+            max_knowledge_units=10,
         )
 
         # Act
@@ -109,6 +110,7 @@ class TestStartStudySessionUseCase:
             question_generator=mock_question_gen,
             question_repository=question_repository,
             max_questions=5,
+            max_knowledge_units=10,
         )
 
         # Act
@@ -153,6 +155,7 @@ class TestStartStudySessionUseCase:
             question_generator=mock_question_gen,
             question_repository=question_repository,
             max_questions=5,
+            max_knowledge_units=10,
         )
 
         # Act
@@ -199,6 +202,7 @@ class TestStartStudySessionUseCase:
             question_generator=mock_question_gen,
             question_repository=question_repository,
             max_questions=5,
+            max_knowledge_units=10,
         )
 
         # Act
@@ -225,6 +229,7 @@ class TestStartStudySessionUseCase:
             question_generator=mock_question_gen,
             question_repository=question_repository,
             max_questions=5,
+            max_knowledge_units=10,
         )
 
         # Act & Assert

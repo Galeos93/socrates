@@ -58,11 +58,12 @@ DEMO time!
 
 ## Day 7 (3 February)
 
-README and documentation creation.
+Demo creation!! (reduce knowledge units and questions, see difficulty update, update mastery, go back home). Mention LLMs. Then, new project, show threads, user feedback and experiments.
 
 ## Day 8 (4 February)
 
-Demo video recording.
+Polish slides!!!!!
+README and documentation creation.
 
 ## Day 9 (5 February)
 

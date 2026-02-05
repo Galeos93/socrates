@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from vyper import v
+
 from opik import Opik, Prompt
 from opik.exceptions import PromptTemplateStructureMismatch
 
@@ -12,7 +14,7 @@ class OpikPromptFactory:
     def __post_init__(self):
         """Initialize Opik client if not provided."""
         if self.opik_client is None:
-            self.opik_client = Opik()
+            self.opik_client = Opik(project_name=v.get_string("opik.project_name"))
 
     def build(self, template: str, template_arguments: Dict) -> str:
         # This saves the prompt template to Opik if not already present
