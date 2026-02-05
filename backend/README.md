@@ -40,6 +40,21 @@ The API will be available at `http://localhost:8000`
 - **API Documentation**: `http://localhost:8000/docs`
 - **Health Check**: `http://localhost:8000/health`
 
+### Opik Configuration (OPTIONAL)
+
+If you want to configure Opik for tracking:
+
+```bash
+# Get the environment activation command
+poetry env activate
+
+# Run the returned source command (e.g., source /path/to/venv/bin/activate)
+# Copy and run the path returned by the previous command
+
+# Configure Opik
+opik configure
+```
+
 ### Running Tests
 
 Run the full test suite (via Poetry):

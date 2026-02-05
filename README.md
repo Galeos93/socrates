@@ -6,7 +6,7 @@ An AI-powered study assistant that extracts knowledge from documents, generates 
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.11+ with Poetry
 - Node.js
 - OpenAI API key
 - Gemini API key
@@ -16,31 +16,34 @@ An AI-powered study assistant that extracts knowledge from documents, generates 
 1. **Backend Setup**
    ```bash
    cd backend
-   pip install -e .
+   # If you don't have Poetry installed, follow https://python-poetry.org/docs/#installation
+   poetry install
+   ```
 
-   # Create .env file
-   cat > .env << EOF
-   OPENAI_API_KEY=your_openai_api_key_here
-   OPIK_PROJECT_NAME=socrates
-   EOF
+   Create a `.env` file in the `backend` directory with:
+   ```text
+   OPENAI_API_KEY="your_openai_api_key_here"
+   OPIK_PROJECT_NAME="socrates"
    ```
 
 2. **Frontend Setup**
    ```bash
    cd frontend
    npm install
+   ```
 
-   # Set GEMINI_API_KEY in .env.local
-   echo "GEMINI_API_KEY=your_gemini_api_key_here" > .env.local
+   Create a `.env.local` file in the `frontend` directory with:
+   ```text
+   GEMINI_API_KEY=your_gemini_api_key_here
+   # BACKEND_HOST=http://localhost:8000  # Optional if backend runs elsewhere
    ```
 
 ### Running the Application
 
 1. **Start the Backend** (in `backend/` directory):
    ```bash
-   python main.py
+   poetry run python main.py
    ```
-   API will be available at `http://localhost:8000`
 
 2. **Start the Frontend** (in `frontend/` directory):
    ```bash

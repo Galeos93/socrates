@@ -20,6 +20,7 @@ View your app in AI Studio: https://ai.studio/apps/drive/1AXzHfY_iWHiWybkyGOLQaB
 2. Set up environment variables:
    ```bash
    # Set the GEMINI_API_KEY in .env.local to your Gemini API key
+   # You can set the BACKEND_HOST in .env.local if your backend is not running on localhost:8000
    ```
 
 ### Running the Application
