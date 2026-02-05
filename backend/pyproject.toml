@@ -3,7 +3,7 @@ name = "socrates"
 version = "0.1.0"
 description = "A study assistant using LLMs to generate knowledge units, questions, and learning routines."
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 authors = [
   { name = "Galeos93", email = "galeos93@users.noreply.github.com" }
 ]
@@ -24,7 +24,7 @@ dependencies = [
   "requests>=2.32.5,<3.0.0",
   "opik>=1.9.93,<2.0.0",
   "werkzeug>=1.0.1",
-  "pymupdf (>=1.26.7,<2.0.0)",
+  "pymupdf>=1.26.7,<2.0.0",
 ]
 
 [project.urls]
@@ -36,6 +36,20 @@ app = "main:app"
 
 [tool.poetry]
 package-mode = false
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+  "application*",
+  "common*",
+  "domain*",
+  "experiments*",
+  "infrastructure*",
+]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
