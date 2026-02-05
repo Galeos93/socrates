@@ -11,18 +11,19 @@ An AI-powered study assistant that extracts knowledge from documents, generates 
 
 ### Installation
 
-1. Install dependencies:
+1. Install dependencies (using Poetry):
 ```bash
-pip install -e .
+# If you don't have Poetry installed, follow https://python-poetry.org/docs/#installation
+poetry install
 ```
 
 2. Set up environment variables:
-```bash
-# Create .env file with required variables
-cat > .env << EOF
-OPENAI_API_KEY=your_openai_api_key_here
-OPIK_PROJECT_NAME=socrates
-EOF
+
+Create a file named `.env` in the `backend` directory and add the required variables. Wrap values in double quotes, for example:
+
+```text
+OPENAI_API_KEY="your_openai_api_key_here"
+OPIK_PROJECT_NAME="socrates"
 ```
 
 ### Running the Application
@@ -30,7 +31,8 @@ EOF
 Start the FastAPI server:
 
 ```bash
-python main.py
+# from the backend folder (use Poetry to run in the project's venv)
+poetry run python main.py
 ```
 
 The API will be available at `http://localhost:8000`
@@ -40,16 +42,16 @@ The API will be available at `http://localhost:8000`
 
 ### Running Tests
 
-Run the full test suite:
+Run the full test suite (via Poetry):
 
 ```bash
-pytest
+poetry run pytest
 ```
 
-Run with coverage:
+Run with coverage (via Poetry):
 
 ```bash
-pytest --cov=. --cov-report=term-missing
+poetry run pytest --cov=. --cov-report=term-missing
 ```
 
 ## Architecture
