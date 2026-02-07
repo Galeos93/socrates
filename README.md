@@ -1,6 +1,6 @@
 # Socrates - AI-Powered Study Assistant
 
-An AI-powered study assistant that extracts knowledge from documents, generates adaptive questions, and tracks learning progress using mastery-based learning.
+Socrates is an AI-powered study assistant that turns documents into structured, adaptive learning experiences. It uses LLMs to extract key facts and skills, generate personalized questions, assess answers, and track mastery over time, helping learners actually learn, not just read.
 
 ## Quick Start
 
@@ -49,6 +49,23 @@ An AI-powered study assistant that extracts knowledge from documents, generates 
    ```bash
    npm run dev
    ```
+
+## How It Works
+
+Socrates operates as a closed learning loop:
+
+1. Upload a PDF document
+2. Extract Knowledge Units (facts and skills) from the text
+3. Generate adaptive questions based on current mastery levels
+4. Assess user answers automatically
+5. Update mastery levels and repeat
+
+### System Architecture
+
+- **React-based frontend** for user interaction
+- **Python FastAPI backend** with Clean Architecture
+- **OpenAI GPT-4o** for LLM processing
+- **Opik** for full observability and tracing
 
 ## Project Structure
 

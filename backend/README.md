@@ -1,6 +1,6 @@
 # Socrates Backend - AI-Powered Study Assistant
 
-An AI-powered study assistant that extracts knowledge from documents, generates adaptive questions, and tracks learning progress using mastery-based learning.
+Socrates is an AI-powered study assistant that turns documents into structured, adaptive learning experiences. The backend extracts Knowledge Units (facts and skills) from documents, generates adaptive questions using LLMs, assesses user answers, and tracks learning mastery over time.
 
 ## Quick Start
 
@@ -68,6 +68,50 @@ Run with coverage (via Poetry):
 ```bash
 poetry run pytest --cov=. --cov-report=term-missing
 ```
+
+## How It Works
+
+### Learning Workflow
+
+The backend implements a complete learning workflow that operates as a closed learning loop:
+
+1. **Document Processing** → A PDF document is uploaded and parsed into text
+2. **Knowledge Extraction** → Extract Knowledge Units from the text:
+   - **Fact Knowledge**: Answers are grounded in explicit claims from the document
+   - **Skill Knowledge**: Answers require applying the document's knowledge to new or practical situations
+3. **Learning Plan Creation** → Select and organize knowledge units to master
+4. **Study Session** → Generate questions whose difficulty adapts to the mastery of each selected Knowledge Unit
+5. **Answer Evaluation** → Assess correctness of learner responses automatically
+6. **Mastery Tracking** → Update knowledge unit mastery based on performance and repeat from step 4
+
+All steps except mastery selection, mastery updates, and session scheduling (steps 3, 6, and repeat logic) are powered by LLMs.
+
+The system uses Clean Architecture with clear separation between domain logic, application use cases, and infrastructure adapters. All LLM interactions are powered by OpenAI's GPT-4o and fully traced using Opik for observability.
+
+### Observability and Evaluation
+
+All LLM-related processes are fully traced using Opik. Traces are grouped into threads, where each thread represents a complete interaction starting from document ingestion.
+
+The system incorporates user feedback and automated evaluation across multiple dimensions:
+
+#### Question Coverage and Quality
+- Coverage: Does the question adequately address the input overall?
+- Completeness: Does the question sufficiently test the key aspects of the concept?
+- Redundancy: Is there unnecessary repetition?
+- Answer feasibility: Can the question be answered using plain text input?
+
+#### Knowledge Unit Generation Quality
+- Relevance: How useful the unit is for learning the input material
+- Grounding: Whether claims are supported by the source text
+- Diversity: Whether units cover distinct aspects of the input
+- Complexity: Whether some units require synthesis across multiple parts of the document
+- Redundancy: Degree of unnecessary repetition
+
+#### Answer Assessment Quality
+- Correctness: Does the user's answer accurately address the question and align with the expected solution?
+- Leniency/strictness calibration: Is the judgment appropriately strict or lenient given the question's difficulty and intent?
+- Explanation quality: Is the explanation clear and helpful for learning?
+- Pedagogical usefulness: Would this assessment help the user improve their understanding?
 
 ## Architecture
 

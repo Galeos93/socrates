@@ -354,9 +354,9 @@ def get_create_learning_plan_api() -> CreateLearningPlanAPIImpl:
     )
 
     if v.get_bool("opik.enable_tracking"):
-        api.create_learning_plan = track(v.get_string("opik.project_name"))(
-            api.create_learning_plan
-        )
+        api.create_learning_plan = track(
+                project_name=v.get_string("opik.project_name")
+        )(api.create_learning_plan)
 
     return api
 
